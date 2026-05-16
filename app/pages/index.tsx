@@ -1,6 +1,7 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
+import ReportButton from '../components/ReportButton';
 
 // Leaflet lazy-loaded as a secondary chunk — excluded from initial paint bundle.
 // Status list renders immediately; map appears after Leaflet chunk loads.
@@ -26,6 +27,7 @@ const Home: NextPage = () => {
         {/* Map component — lazy-loaded (T-007) */}
         <Map />
         {/* ReportButton — T-008 */}
+        <ReportButton />
         {/* Status list — uses data from lib/api.ts (T-009) */}
       </main>
     </>
