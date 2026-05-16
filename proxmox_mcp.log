@@ -1,0 +1,6 @@
+2026-05-16 09:21:05,482 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 192.168.1.5
+2026-05-16 09:21:05,726 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for user 'mcp-agent')
+2026-05-16 09:21:05,739 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-05-16 09:21:05,757 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-05-16 09:21:05,758 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-05-16 09:21:05,759 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
