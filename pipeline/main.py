@@ -30,6 +30,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from pipeline.cross_validation import backfill_confirmed_by_passive, cross_validate
+from pipeline.outage_lifecycle import process_lifecycle
 from pipeline.quorum import compute_crowd_score, compute_quorum
 from pipeline.regions import REGIONS
 from pipeline.scorer import compute_region_score
@@ -327,6 +328,12 @@ def run(now: datetime | None = None) -> dict:
             weather_score=wx_score,
             supabase_client=supabase_client if phase >= 2 else None,
         )
+
+    if phase >= 2 and supabase_client is not None:
+        try:
+            process_lifecycle(region_output, now, supabase_client)
+        except Exception as exc:
+            logger.error("lifecycle failed: %s", exc)
 
     return build_status_json(now, phase, collector_errors, region_output)
 
