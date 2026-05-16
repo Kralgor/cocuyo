@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { submitReport, getRecentCount } from '../lib/api';
 
 // ── region list (mirrors pipeline/regions.py order) ───────────────────────────
 const REGIONS = [
@@ -27,10 +28,8 @@ const STATUS_OPTIONS = [
   { key: 'power_back',  label: 'Volvió la luz',   emoji: '🟢' },
 ] as const;
 
-const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL  ?? '';
-const SUPABASE_KEY  = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const LAST_REPORT_KEY = 'cocuyo_last_report';
-const POWER_BACK_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours
+const POWER_BACK_WINDOW_MS = 12 * 60 * 60 * 1000;
 
 // ── types ─────────────────────────────────────────────────────────────────────
 type Step = 'idle' | 'region' | 'unlisted' | 'status' | 'submitting' | 'done' | 'error';
@@ -48,45 +47,6 @@ function requestGps(): Promise<Gps | null> {
       { timeout: 6000, maximumAge: 60000 },
     );
   });
-}
-
-// ── Supabase helpers ──────────────────────────────────────────────────────────
-const HEADERS = {
-  'Content-Type':  'application/json',
-  'apikey':        SUPABASE_KEY,
-  'Authorization': `Bearer ${SUPABASE_KEY}`,
-  'Prefer':        'return=minimal',
-};
-
-async function submitReport(payload: {
-  region: string;
-  status: string;
-  lat: number | null;
-  lon: number | null;
-  city_freetext: string | null;
-}): Promise<void> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
-    method:  'POST',
-    headers: HEADERS,
-    body:    JSON.stringify({
-      ...payload,
-      onset_type:         null,  // Phase 2+
-      symptom:            null,  // Phase 2+
-      device_fingerprint: null,  // collected but unused until Phase 4 (ADR-005)
-    }),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-}
-
-async function fetchRecentCount(region: string): Promise<number | null> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_recent_count`, {
-    method:  'POST',
-    headers: { ...HEADERS, Prefer: '' },
-    body:    JSON.stringify({ p_region: region, p_minutes: 30 }),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return typeof data === 'number' ? data : null;
 }
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -155,7 +115,7 @@ export default function ReportButton() {
       saveLastReport({ ...shortcut, status: 'power_back', ts: Date.now() });
       setShortcut(null);
       clearLastReport();
-      const count = await fetchRecentCount(shortcut.region);
+      const count = await getRecentCount(shortcut.region);
       setRecentCount(count);
       setRegion(shortcut.region);
       setDisplayName(shortcut.displayName);
@@ -200,7 +160,7 @@ export default function ReportButton() {
         city_freetext: region === 'unlisted' ? displayName : null,
       });
       saveLastReport({ region, displayName, status: selectedStatus, ts: Date.now() });
-      const count = await fetchRecentCount(region);
+      const count = await getRecentCount(region);
       setRecentCount(count);
       setStep('done');
     } catch {

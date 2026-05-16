@@ -3,6 +3,7 @@
 
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import type { RegionEntry } from '../lib/api';
 
 // ── colour mapping ────────────────────────────────────────────────────────────
 // Phase 1: only no_data (grey) and unverified_reports (blue) ever appear.
@@ -29,13 +30,7 @@ function regionColor(status: string): string {
   return STATUS_COLORS[status] ?? '#9e9e9e';
 }
 
-// ── types ─────────────────────────────────────────────────────────────────────
-export interface RegionEntry {
-  display_name: string;
-  status: string;
-  crowd_reports_30min: number;
-  signals: { crowdsource: number | null };
-}
+export type { RegionEntry };
 
 // ── region coordinates (mirrors pipeline/regions.py) ──────────────────────────
 const REGION_COORDS: Record<string, [number, number]> = {
@@ -63,10 +58,14 @@ const MOCK_REGIONS: Record<string, RegionEntry> = Object.fromEntries(
   Object.keys(REGION_COORDS).map((key) => [
     key,
     {
-      display_name: key.replace(/_/g, ' '),
-      status: 'no_data',
+      display_name:        key.replace(/_/g, ' '),
+      current_score:       null,
+      prediction_score:    null,
+      status:              'no_data',
+      signals:             { internet: null, satellite: null, crowdsource: null, weather: null },
       crowd_reports_30min: 0,
-      signals: { crowdsource: null },
+      prediction_text:     null,
+      rationing_pattern:   null,
     },
   ])
 );
