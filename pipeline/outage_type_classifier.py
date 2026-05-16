@@ -1,8 +1,9 @@
 """
-Outage type classifier — Phase 2 simple version.
+Outage type classifier — Phase 2 simple + full OutageSignature scorer.
 
-4 output types: rationing, transmission_fault, national_blackout, unknown.
-Uses only signals available at Phase 2 detection time.
+classify_outage_type dispatches on input type:
+  OutageSignals  → simple 4-type if/elif (Phase 2 backward compat)
+  OutageSignature → full 6-type scored system (T-025B)
 """
 from dataclasses import dataclass
 from datetime import datetime
@@ -107,24 +108,222 @@ def check_rationing_pattern(region: str, hour: int, day_of_week: int) -> dict:
     }
 
 
-def classify_outage_type(
-    signals: OutageSignals,
-    region: str,
-    started_at: datetime,
-) -> dict:
-    """
-    Classify outage into rationing | transmission_fault | national_blackout | unknown.
 
-    Priority order (highest wins):
-      1. national_blackout — >= 5 regions OR national inet drop
-      2. transmission_fault — >= 2 regions OR regional inet drop (no national)
-      3. rationing — matches schedule OR periodic interval
-      4. unknown — fallback
+def _matches_periodic_interval(hours: float) -> bool:
+    """True if interval is within tolerance of a known periodic cycle."""
+    if hours <= 0:
+        return False
+    return any(
+        abs(hours - period) <= _INTERVAL_TOLERANCE_H
+        for period in _PERIODIC_INTERVALS
+    )
+
+
+# ── Full OutageSignature classifier (T-025B) ──────────────────────────────────
+
+@dataclass
+class OutageSignature:
+    """All signals available at detection time (18-field full version)."""
+    # Geographic scope
+    regions_affected: list
+    zones_affected: list
+    total_zones_in_region: int
+
+    # Temporal
+    started_at: datetime
+    day_of_week: int
+    matches_known_schedule: bool
+    time_since_last_outage_hours: float
+
+    # Speed of onset
+    reports_first_5min: int
+    reports_first_15min: int
+
+    # Internet connectivity
+    inet_drop_pct: float        # 0-100
+    inet_drop_speed: str        # "instant" | "gradual" | "none"
+
+    # Crowd report content
+    reports_mention_explosion: int
+    reports_mention_transformer: int
+    reports_mention_smoke_fire: int
+    reports_mention_fluctuation: int
+
+    # Weather
+    active_storm: bool
+    wind_speed_kmh: float
+    lightning_nearby: bool
+
+    # Historical pattern
+    similar_outage_count_90days: int
+
+
+def _classify_full(sig: OutageSignature) -> dict:
+    """Score-based 6-type classifier using OutageSignature."""
+    scores: dict[str, float] = {
+        "rationing":        0.0,
+        "feeder_fault":     0.0,
+        "substation_fault": 0.0,
+        "transmission_fault": 0.0,
+        "national_blackout": 0.0,
+        "weather_damage":   0.0,
+    }
+
+    pct_zones = len(sig.zones_affected) / max(sig.total_zones_in_region, 1)
+
+    # === GEOGRAPHIC SCOPE ===
+    if len(sig.regions_affected) >= 5:
+        scores["national_blackout"] += 0.4
+    elif len(sig.regions_affected) >= 2:
+        scores["transmission_fault"] += 0.3
+
+    if len(sig.zones_affected) == 1:
+        scores["rationing"]    += 0.2
+        scores["feeder_fault"] += 0.2
+    elif 2 <= len(sig.zones_affected) <= 5:
+        scores["substation_fault"] += 0.2
+        scores["rationing"]        += 0.1
+    elif pct_zones > 0.5:
+        scores["substation_fault"] += 0.3
+
+    # === TEMPORAL PATTERN ===
+    if sig.matches_known_schedule:
+        scores["rationing"] += 0.35
+    else:
+        scores["feeder_fault"]     += 0.1
+        scores["substation_fault"] += 0.1
+
+    if sig.day_of_week < 5 and 10 <= sig.started_at.hour <= 21:
+        scores["rationing"] += 0.1
+
+    if sig.time_since_last_outage_hours > 0:
+        for period in _PERIODIC_INTERVALS:
+            if abs(sig.time_since_last_outage_hours - period) < _INTERVAL_TOLERANCE_H:
+                scores["rationing"] += 0.15
+                break
+
+    if sig.similar_outage_count_90days > 20:
+        scores["rationing"] += 0.15
+    elif sig.similar_outage_count_90days < 3:
+        scores["feeder_fault"]   += 0.15
+        scores["weather_damage"] += 0.1
+
+    # === ONSET SPEED ===
+    if sig.reports_first_5min > 20:
+        scores["feeder_fault"]      += 0.1
+        scores["substation_fault"]  += 0.1
+        scores["national_blackout"] += 0.1
+    elif sig.reports_first_5min < 5 and sig.reports_first_15min > 15:
+        scores["rationing"] += 0.1
+
+    # === INTERNET DROP PATTERN ===
+    if sig.inet_drop_speed == "instant" and sig.inet_drop_pct > 80:
+        scores["national_blackout"]  += 0.2
+        scores["transmission_fault"] += 0.15
+    elif sig.inet_drop_speed == "gradual":
+        scores["rationing"] += 0.1
+
+    # === USER-REPORTED SYMPTOMS ===
+    if sig.reports_mention_explosion > 0 or sig.reports_mention_smoke_fire > 0:
+        scores["feeder_fault"]   += 0.25
+        scores["weather_damage"] += 0.1
+
+    if sig.reports_mention_transformer > 2:
+        scores["feeder_fault"] += 0.2
+
+    if sig.reports_mention_fluctuation > 5:
+        scores["substation_fault"] += 0.15
+        scores["rationing"]        += 0.05
+
+    # === WEATHER ===
+    if sig.active_storm:
+        scores["weather_damage"] += 0.3
+    if sig.lightning_nearby:
+        scores["weather_damage"] += 0.15
+    if sig.wind_speed_kmh > 60:
+        scores["weather_damage"] += 0.2
+
+    if not sig.active_storm and not sig.lightning_nearby:
+        scores["weather_damage"] *= 0.2
+
+    # === NORMALIZE ===
+    total = sum(scores.values())
+    if total > 0:
+        scores = {k: round(v / total, 3) for k, v in scores.items()}
+
+    best_type  = max(scores, key=scores.get)
+    confidence = scores[best_type]
+
+    return {
+        "type":        best_type,
+        "confidence":  confidence,
+        "all_scores":  scores,
+        "explanation": build_explanation(best_type, sig),
+    }
+
+
+def build_explanation(outage_type: str, sig: OutageSignature) -> str:
+    explanations = {
+        "rationing": (
+            f"Matches scheduled rationing pattern. "
+            f"{sig.similar_outage_count_90days} similar outages in last 90 days. "
+            f"{'Matches known PAC schedule.' if sig.matches_known_schedule else ''}"
+        ),
+        "feeder_fault": (
+            f"Localized to single zone. "
+            f"{'Users report explosion/smoke. ' if sig.reports_mention_explosion or sig.reports_mention_smoke_fire else ''}"
+            f"Does not match typical rationing schedule."
+        ),
+        "substation_fault": (
+            f"{len(sig.zones_affected)} adjacent zones affected simultaneously. "
+            f"Likely substation or major distribution equipment failure."
+        ),
+        "transmission_fault": (
+            f"{len(sig.regions_affected)} regions affected simultaneously. "
+            f"Consistent with high-voltage transmission line failure."
+        ),
+        "national_blackout": (
+            f"{len(sig.regions_affected)} regions affected. "
+            f"Internet connectivity dropped {sig.inet_drop_pct:.0f}% instantly. "
+            f"Possible generation failure or cascading grid collapse."
+        ),
+        "weather_damage": (
+            f"Active storm in area with {sig.wind_speed_kmh:.0f} km/h winds. "
+            f"{'Lightning detected nearby. ' if sig.lightning_nearby else ''}"
+            f"Outage likely caused by weather damage to local infrastructure."
+        ),
+    }
+    return explanations.get(outage_type, "Unable to determine cause.")
+
+
+# ── unified dispatcher ────────────────────────────────────────────────────────
+
+def classify_outage_type(sig, region: str | None = None, started_at: datetime | None = None) -> dict:
     """
+    Classify an outage.
+
+    If sig is OutageSignature → full 6-type scored system.
+    If sig is OutageSignals   → simple 4-type if/elif (Phase 2 backward compat).
+    """
+    if isinstance(sig, OutageSignature):
+        return _classify_full(sig)
+    return _classify_simple(sig, region, started_at)
+
+
+def _classify_simple(
+    signals: "OutageSignals",
+    region: str | None,
+    started_at: datetime | None,
+) -> dict:
+    """Original Phase 2 simple classifier — preserved for backward compatibility."""
+    if started_at is None:
+        raise ValueError("started_at required for OutageSignals classifier")
+    if region is None:
+        raise ValueError("region required for OutageSignals classifier")
+
     hour = started_at.hour
     day  = started_at.weekday()
 
-    # ── Priority 1: national blackout ─────────────────────────────────────────
     if signals.adjacent_regions_affected >= _NATIONAL_REGIONS_THRESHOLD or signals.inet_drop_national:
         regions = signals.adjacent_regions_affected
         confidence = 0.9 if (signals.inet_drop_national and regions >= 5) else 0.75
@@ -135,7 +334,6 @@ def classify_outage_type(
         )
         return {"type": "national_blackout", "confidence": confidence, "explanation": explanation}
 
-    # ── Priority 2: transmission fault ────────────────────────────────────────
     if signals.adjacent_regions_affected >= _TRANSMISSION_REGIONS_THRESHOLD or signals.inet_drop_regional:
         regions = signals.adjacent_regions_affected
         confidence = 0.80 if (signals.inet_drop_regional and regions >= 2) else 0.65
@@ -146,8 +344,7 @@ def classify_outage_type(
         )
         return {"type": "transmission_fault", "confidence": confidence, "explanation": explanation}
 
-    # ── Priority 3: rationing ─────────────────────────────────────────────────
-    pattern = check_rationing_pattern(region, hour, day)
+    pattern  = check_rationing_pattern(region, hour, day)
     periodic = _matches_periodic_interval(signals.time_since_last_outage_hours)
 
     if pattern["matches"] or periodic:
@@ -163,22 +360,10 @@ def classify_outage_type(
             + (f"Interval since last outage (~{signals.time_since_last_outage_hours:.0f}h) "
                f"matches periodic pattern. " if periodic else "")
         ).strip()
-
         return {"type": "rationing", "confidence": confidence, "explanation": explanation}
 
-    # ── Priority 4: unknown ───────────────────────────────────────────────────
     return {
         "type": "unknown",
         "confidence": 0.0,
         "explanation": "Insufficient signals to classify outage type.",
     }
-
-
-def _matches_periodic_interval(hours: float) -> bool:
-    """True if interval is within tolerance of a known periodic cycle."""
-    if hours <= 0:
-        return False
-    return any(
-        abs(hours - period) <= _INTERVAL_TOLERANCE_H
-        for period in _PERIODIC_INTERVALS
-    )
