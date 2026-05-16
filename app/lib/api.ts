@@ -15,6 +15,30 @@ export interface RationingPattern {
   typical_duration_hours: string;
 }
 
+export interface OutageEstimatedRemaining {
+  optimistic:  string;
+  likely:      string;
+  pessimistic: string;
+}
+
+export interface OutageInfo {
+  type:                  string;
+  started_at:            string;
+  elapsed_minutes:       number;
+  estimated_remaining:   OutageEstimatedRemaining;
+  estimated_restoration: string;
+  confidence:            'high' | 'medium' | 'low';
+  based_on:              string;
+  message:               string;
+  progress_pct:          number;
+}
+
+export interface CrowdInfo {
+  no_power_reports_30min:   number;
+  power_back_reports_30min: number;
+  power_back_areas:         string[];
+}
+
 export interface RegionEntry {
   display_name:         string;
   current_score:        number | null;
@@ -24,6 +48,8 @@ export interface RegionEntry {
   crowd_reports_30min:  number;
   prediction_text:      string | null;
   rationing_pattern:    RationingPattern | null;
+  outage?:              OutageInfo;
+  crowd?:               CrowdInfo;
 }
 
 export interface StatusJson {
