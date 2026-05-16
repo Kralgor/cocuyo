@@ -2,6 +2,7 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import ReportButton from '../components/ReportButton';
+import StatusBar from '../components/StatusBar';
 import { useAutoRefresh } from '../lib/api';
 
 // Leaflet lazy-loaded as a secondary chunk — excluded from initial paint bundle.
@@ -24,6 +25,7 @@ const Home: NextPage = () => {
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      <StatusBar status={status} offline={offline} />
       <main>
         <h1>Cocuyo</h1>
         <p>Estado del servicio eléctrico en Venezuela</p>
