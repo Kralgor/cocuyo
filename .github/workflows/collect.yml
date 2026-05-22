@@ -1,9 +1,10 @@
 name: collect
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'   # collect: every 10 min
-    - cron: '0 0 * * 0'      # retrain: Sunday midnight UTC
+  # Schedules disabled until pipeline is complete — re-enable when ready
+  # schedule:
+  #   - cron: '*/10 * * * *'   # collect: every 10 min
+  #   - cron: '0 0 * * 0'      # retrain: Sunday midnight UTC
   workflow_dispatch:
     inputs:
       job:
