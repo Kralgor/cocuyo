@@ -90,7 +90,7 @@ REGIONS: dict[str, RegionMeta] = {
         "lon": -70.2075,
     },
     "maturin": {
-        "display_name": "Matúrín (Monagas)",
+        "display_name": "Maturín (Monagas)",
         "state": "Monagas",
         "lat": 9.7458,
         "lon": -63.1833,

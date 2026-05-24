@@ -22,6 +22,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Claude Code local settings (may contain tokens)
+.claude/settings.local.json
+
 # Misc
 status.json
 *.sqlite3

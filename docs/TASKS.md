@@ -28,7 +28,7 @@ Wait for human decision before proceeding.
 
 ## Phase 1 — Crowdsource MVP (3-4 weeks)
 
-### T-001: Supabase schema [ ]
+### T-001: Supabase schema [x]
 Create outage_reports, outage_history, and active_outages tables.
 RLS policies: anon INSERT only (restricted columns), service_role SELECT.
 DB function: compute ip_hash from request headers on INSERT.
@@ -46,7 +46,7 @@ Done when: all three tables exist, indexes created, test INSERT works cleanly.
            RPC returns null if no report from caller's IP in last 60 seconds
            (prevents reconnaissance polling without contributing).
 
-### T-001B: pipeline/regions.py [ ]
+### T-001B: pipeline/regions.py [x]
 Single source of truth for all 17 region metadata.
 Exports REGIONS dict: region_key → {display_name, state, lat, lon}.
 Used by main.py (status.json generation), validation.py (bounding box),
@@ -55,7 +55,7 @@ Files: pipeline/regions.py
 Done when: all 17 regions defined with correct state, display_name,
            and approximate city-center lat/lon coordinates.
 
-### T-002: pipeline/validation.py [ ]
+### T-002: pipeline/validation.py [x]
 Implement ReportValidator class.
 Methods: _check_ip_rate, _check_geo_consistency, _check_contradiction
 (device_fingerprint rate limiting deferred to Phase 4 — see ADR-005)
@@ -66,7 +66,7 @@ Done when: unit tests pass for all 3 rejection/flag scenarios.
            Does not validate GPS vs claimed region. GPS absence = 0.7 weight
            penalty, not rejection.
 
-### T-003: pipeline/quorum.py [ ]
+### T-003: pipeline/quorum.py [x]
 Implement compute_crowd_score and compute_quorum.
 Post-quorum score = outage_ratio (no_power_weight / total_weight).
 No diversity multiplier — diversity enforced by quorum gate itself.
@@ -79,7 +79,7 @@ Done when: score=0 with 0 reports, correct dampening below threshold,
            cold_start mode: fixed quorum of 3/2 IPs when ESTIMATED_ACTIVE_USERS is empty.
            Quorum met with all-null sub_zones (min_zones check bypassed).
 
-### T-004: pipeline/scorer.py [ ]
+### T-004: pipeline/scorer.py [x]
 Implement compute_region_score. Internet and satellite can be None.
 prediction_score always null — no heuristic prediction in Phase 1-3.
 prediction_text always null. Both populated by Phase 4 trained model only.
@@ -94,7 +94,7 @@ Done when: returns valid status for all 4 status levels with only crowd input,
            prediction_score and prediction_text are null in output.
            Logs which signals were available each run.
 
-### T-005: pipeline/main.py (skeleton) [ ]
+### T-005: pipeline/main.py (skeleton) [x]
 Orchestrates: pull crowd reports → score → write status.json → upload to R2.
 Reads COCUYO_PHASE env var (default 1). Passes to scorer and other modules.
 status.json includes phase, scheduler, updated_at, next_update_approx,
@@ -111,7 +111,7 @@ Done when: status.json written locally with correct full skeleton schema.
            rationing_pattern present for regions with known patterns, null otherwise.
            Exit code 0 when collectors fail, exit code 1 only on R2 upload failure.
 
-### T-005B: tests/test_pipeline_integration.py [ ]
+### T-005B: tests/test_pipeline_integration.py [x]
 End-to-end integration test for Phase 1 pipeline.
 Feeds synthetic crowd reports through full chain:
   validation → quorum → scorer → status.json output
@@ -128,7 +128,7 @@ Done when: test passes with 0 reports, 2 reports (below quorum),
            and 10 reports (above quorum) for a single region.
            Output JSON validates against status.json schema.
 
-### T-006: app/ Next.js scaffold [ ]
+### T-006: app/ Next.js scaffold [x]
 Create project. Configure static export. Install Leaflet.
 Leaflet must be dynamic import (lazy-loaded, not in initial bundle).
 Initial paint chunk <200KB gzipped (status list, no map).
@@ -147,7 +147,7 @@ Done when: next build produces static export in /out with no errors.
            App loads from cache when offline (shows stale status + banner).
            .gitignore prevents .env files from being committed.
 
-### T-007: app/components/Map.tsx [ ]
+### T-007: app/components/Map.tsx [x]
 Leaflet map of Venezuela, colored regions from status.json.
 Phase 1: grey (no reports) or blue (unverified reports exist).
 Phase 2+: green < 0.25, yellow 0.25-0.45, orange 0.45-0.70, red > 0.70.
@@ -158,7 +158,7 @@ Done when: map renders locally with hardcoded mock status.json.
            Phase 1 map shows grey/blue only — no green/yellow/orange/red.
            Map component loaded via next/dynamic with ssr: false.
 
-### T-008: app/components/ReportButton.tsx [ ]
+### T-008: app/components/ReportButton.tsx [x]
 Two-tap UI in Phase 1: region → status → submit to Supabase REST.
 onset_type and symptom not collected in Phase 1 (null). Added in Phase 2.
 Region step: scrollable list of 17 cities + "My city isn't listed" option.
@@ -179,7 +179,7 @@ Done when: report appears in outage_reports table after tap.
            "Power back?" shortcut appears when localStorage has recent no_power.
            Shortcut submits power_back in one tap and clears itself.
 
-### T-009: app/lib/api.ts [ ]
+### T-009: app/lib/api.ts [x]
 fetchStatus() from CDN. submitReport() to Supabase.
 getRecentCount() calls RPC after submission.
 useAutoRefresh(): reads next_update_approx from status.json, schedules
@@ -188,7 +188,7 @@ Files: app/lib/api.ts
 Done when: fetch and POST shapes verified. Auto-refresh interval adapts
            to next_update_approx. RPC call integrated.
 
-### T-010: .github/workflows/collect.yml [ ]
+### T-010: .github/workflows/collect.yml [x]
 Cron every 10 minutes. Runs pipeline/main.py. All secrets as env vars.
 concurrency: { group: "cocuyo-pipeline", cancel-in-progress: true }
 Files: .github/workflows/collect.yml
@@ -200,26 +200,26 @@ Done when: workflow file validates cleanly.
 
 ## Phase 2 — Passive Monitoring
 
-### T-011: pipeline/collector_internet.py [ ]
+### T-011: pipeline/collector_internet.py [x]
 IODA BGP signals for 4 Venezuelan ASNs.
 Files: pipeline/collector_internet.py, tests/test_collector_internet.py
 Done when: returns dict with score 0-1 per ASN, handles timeout gracefully.
 
-### T-012: pipeline/collector_cloudflare.py [ ]
+### T-012: pipeline/collector_cloudflare.py [x]
 Traffic timeseries per ASN + anomaly detection.
 Files: pipeline/collector_cloudflare.py, tests/test_collector_cloudflare.py
 Done when: >60% drop correctly detected as detected: true in unit test.
 
 ### ~~T-013~~ — MOVED TO PHASE 3 (OONI deferred, see Phase 3 section)
 
-### T-014: pipeline/collector_internet_unified.py [ ]
+### T-014: pipeline/collector_internet_unified.py [x]
 Combines IODA + Cloudflare Radar (no OONI in Phase 2).
 Returns one of 4 situation types: power_outage, isp_failure,
 confirmed_disruption, normal. (censorship case deferred with OONI.)
 Files: pipeline/collector_internet_unified.py, tests/test_unified.py
 Done when: all 4 cases produce correct classification in unit tests.
 
-### T-015: pipeline/cross_validation.py [ ]
+### T-015: pipeline/cross_validation.py [x]
 Reconciles crowd vs passive signals. Flags manipulation.
 Side effect: when passive confirms outage in a region, UPDATE
 outage_reports SET confirmed_by_passive = TRUE for matching
@@ -230,7 +230,7 @@ Done when: Case 3 (crowd says outage, passive says no) returns
            flag: "possible_manipulation".
            Confirmed case backfills confirmed_by_passive on matching reports.
 
-### T-016-PRE: Migrate to reliable scheduler [ ]
+### T-016-PRE: Migrate to reliable scheduler [x]
 GitHub Actions cron has 10-40min variance. Before Phase 2 passive signals
 go live, pipeline must run on a reliable scheduler with <2min variance.
 Options (decide at Phase 2 start):
@@ -241,12 +241,12 @@ Files: .github/workflows/collect.yml (remove or demote to fallback),
 Done when: pipeline runs on reliable scheduler with <2min variance.
            GitHub Actions cron removed or kept only as fallback.
 
-### T-016: pipeline/main.py (full) [ ]
+### T-016: pipeline/main.py (full) [x]
 Wire all collectors into scorer. Cross-validate. Write status.json.
 Files: pipeline/main.py (update)
 Done when: full pipeline run produces valid status.json for all 17 regions.
 
-### T-016B: pipeline/outage_lifecycle.py [ ]
+### T-016B: pipeline/outage_lifecycle.py [x]
 Bridges raw reports → outage events → outage_history.
 Runs each pipeline cycle. Responsibilities:
 1. Detect new outage events from score transitions (normal → outage)
@@ -271,31 +271,31 @@ Done when: score transition normal→outage creates active_outages row,
 
 ## Phase 3 — Satellite Data
 
-### T-017: pipeline/collector_viirs.py [ ]
+### T-017: pipeline/collector_viirs.py [x]
 NASA LANCE VNP46A2NRT nighttime lights vs baseline radiance per region.
 Files: pipeline/collector_viirs.py, tests/test_collector_viirs.py
 Done when: classify_ratio returns correct status for mock radiance values,
            handles missing granules gracefully.
 
-### T-018: pipeline/collector_weather.py [ ]
+### T-018: pipeline/collector_weather.py [x]
 NASA POWER temperature + humidity → heat_stress_score 0-3.
 Files: pipeline/collector_weather.py, tests/test_collector_weather.py
 Done when: returns heat_stress_score for all 4 cities, handles API timeout.
 
-### T-019: pipeline/zone_mapper.py [ ]
+### T-019: pipeline/zone_mapper.py [x]
 Clusters GPS reports → learns feeder circuit boundaries.
 Files: pipeline/zone_mapper.py, tests/test_zone_mapper.py
 Done when: cluster_concurrent_reports groups overlapping GPS points correctly,
            haversine distance calculation verified against known coordinates.
 
-### T-013: pipeline/collector_ooni.py [ ]
+### T-013: pipeline/collector_ooni.py [x]
 Recent VE measurements, anomaly_rate computed.
 Adds censorship detection case to collector_internet_unified.py.
 Files: pipeline/collector_ooni.py, tests/test_collector_ooni.py
 Done when: returns total_measurements, anomaly_rate, anomalies list.
            Unified collector updated to 5 situation types (adds censorship).
 
-### T-020: pipeline/main.py (add satellite) [ ]
+### T-020: pipeline/main.py (add satellite) [x]
 Wire VIIRS + weather + OONI collectors into scorer. Update status.json schema.
 Files: pipeline/main.py (update)
 Done when: status.json includes satellite signal scores for all 17 regions.
@@ -304,7 +304,7 @@ Done when: status.json includes satellite signal scores for all 17 regions.
 
 ## Phase 4 — Prediction + Classification
 
-### T-021: pipeline/outage_type_classifier.py (simple — spec Section 8.1) [ ]
+### T-021: pipeline/outage_type_classifier.py (simple — spec Section 8.1) [x]
 Simple if/elif classifier using signals available in Phase 2:
 inet_drop_national, inet_drop_regional, adjacent_regions_affected,
 crowd_reports_count, time_since_last_outage_hours.
@@ -314,7 +314,7 @@ Done when: all 4 types correctly classified in unit tests.
            check_rationing_pattern returns correct confidence for
            known regional patterns (Zulia interdiario, Tachira daily).
 
-### T-022: pipeline/duration_estimator.py [ ]
+### T-022: pipeline/duration_estimator.py [x]
 Conditional survival analysis on historical_durations.
 Refines estimate as outage continues.
 Files: pipeline/duration_estimator.py, tests/test_duration_estimator.py
@@ -322,19 +322,19 @@ Done when: survival_estimate returns p25/p50/p75 correctly,
            fallback_estimate handles sparse data,
            crowd_restoration_reports correctly reduces median estimate.
 
-### T-023: pipeline/restoration_tracker.py [ ]
+### T-023: pipeline/restoration_tracker.py [x]
 Detects when power returns via crowd + inet recovery signals.
 Files: pipeline/restoration_tracker.py, tests/test_restoration_tracker.py
 Done when: "restored" status requires stable + at least 2 signals,
            "recovering" returned when only 1 signal present.
 
-### T-024: pipeline/calibration.py [ ]
+### T-024: pipeline/calibration.py [x]
 Weekly recalibrate_active_users from Supabase analytics.
 Files: pipeline/calibration.py
 Done when: returns updated user count per region from distinct ip_hash count,
            multiplier applied correctly.
 
-### T-025: train_duration_model.py [ ]
+### T-025: train_duration_model.py [x]
 XGBoost weekly retrain on outage_history table.
 Also produces the prediction_score model — first time prediction_score
 and prediction_text become non-null in status.json.
@@ -344,7 +344,7 @@ Done when: model trains without error on mock DataFrame,
            MAE printed to logs.
            prediction_score populated in status.json for first time.
 
-### T-025B: pipeline/outage_type_classifier.py (full — spec Section 7) [ ]
+### T-025B: pipeline/outage_type_classifier.py (full — spec Section 7) [x]
 Replaces simple Phase 2 classifier with full 18-field OutageSignature
 scoring system. Same file, same function name, richer implementation.
 Adds types: feeder_fault, substation_fault, weather_damage.
@@ -355,18 +355,18 @@ Done when: all 6 outage types correctly classified from OutageSignature.
            Normalization verified (scores sum to 1.0).
            Existing Phase 2 tests still pass (backward compatible types).
 
-### T-026: app/components/RegionCard.tsx [ ]
+### T-026: app/components/RegionCard.tsx [x]
 Detail panel showing: outage type, elapsed time, ETA, confidence,
 progress bar, nearby areas restoring.
 Files: app/components/RegionCard.tsx
 Done when: renders correctly with mock active outage JSON from spec section 8.
 
-### T-027: app/components/StatusBar.tsx [ ]
+### T-027: app/components/StatusBar.tsx [x]
 Top bar with national summary — how many regions out, worst status.
 Files: app/components/StatusBar.tsx
 Done when: renders correctly with mock status.json.
 
-### T-028: .github/workflows/collect.yml (add weekly retrain) [ ]
+### T-028: .github/workflows/collect.yml (add weekly retrain) [x]
 Add separate weekly cron job for train_duration_model.py.
 Files: .github/workflows/collect.yml (update)
 Done when: two separate jobs defined — collect (every 10min) and
@@ -374,42 +374,107 @@ Done when: two separate jobs defined — collect (every 10min) and
 
 ---
 
+## Frontend Redesign — UI from docs/claudedesign
+
+Design decisions locked in docs/handoff-2026-05-16.md (15 items).
+
+### T-F01: Foundation (theme + i18n + context) [x]
+Port theme system (tinta + estudio) and i18n string table from cocuyo-data.js.
+Files: app/lib/theme.ts, app/lib/i18n.ts, app/contexts/AppContext.tsx,
+       app/styles/globals.css, app/pages/_app.tsx
+Done when: ThemeProvider wraps app, CSS vars update on theme switch,
+           tt('key','es') returns Spanish strings, next/font loads all 3 fonts.
+
+### T-F02: Primitives [x]
+Port visualization components from cocuyo-viz.jsx to typed TSX.
+Files: app/components/primitives/Fingerprint.tsx, SignalBar.tsx,
+       FireflyDot.tsx, ForecastCurve.tsx, HistoryStrip.tsx,
+       FrequencyTrace.tsx, SectionLabel.tsx, MiniStat.tsx, Chip.tsx,
+       CrossServiceRow.tsx
+Done when: each renders correctly with mock props in isolation.
+           Fingerprint shows 4 wedges, ghosted wedges at 0.15 for null signals.
+
+### T-F03: Mobile shell + tab navigation [x]
+MobileShell layout with 5-tab bottom nav.
+Files: app/components/mobile/MobileShell.tsx, TabBar.tsx, TabIcon.tsx,
+       app/pages/index.tsx (rewrite)
+Done when: 5 tabs switch content, active tab highlighted,
+           mobile layout max-width centered on desktop.
+
+### T-F04: Region picker [x]
+First-launch full-screen picker (17 cities grouped by state).
+Stores selection in localStorage `cocuyo_region`.
+Files: app/components/mobile/RegionPicker.tsx
+Done when: appears on first visit, selection persisted,
+           title bar shows region name + tap to change.
+
+### T-F05: ScreenZoneDetail (Mi zona — tab 1) [x]
+Region status card + signal fingerprint + rationing pattern callout +
+report buttons. Uses live status.json data for selected region.
+Files: app/components/mobile/ScreenZoneDetail.tsx
+Done when: renders with real status.json, shows crowd signal only (Phase 1),
+           rationing pattern callout shown for regions that have one,
+           3 ghosted fingerprint wedges with lock icon.
+
+### T-F06: Report flow + power-back banner [x]
+One-tap report → POST → inline confirmation + 60s undo + cooldown.
+Power-back sticky banner when localStorage has no_power < 12h.
+Files: app/components/mobile/ReportButtons.tsx,
+       app/components/mobile/PowerBackBanner.tsx
+Done when: report POST succeeds, get_recent_count displayed,
+           undo link works within 60s, power-back banner appears/dismisses.
+
+### T-F07: Map upgrade (tab 2) [x]
+Firefly markers with pulse animation. Theme-aware tiles (dark/light).
+Tap marker → switch to Mi zona with that region + back arrow.
+Leaflet prefetched via requestIdleCallback after initial paint.
+Files: app/components/Map.tsx (rewrite)
+Done when: markers pulse on outage regions, tile layer matches theme,
+           tap navigates to Mi zona, prefetch works.
+
+### T-F08: Teaser screens (tabs 3-5) [x]
+Static demo data at 50% opacity + "Próximamente" overlay for
+Forecast, Bajones, History tabs.
+Files: app/components/mobile/ScreenForecast.tsx,
+       app/components/mobile/ScreenBajones.tsx,
+       app/components/mobile/ScreenHistory.tsx
+Done when: all 3 screens render demo visualizations with overlay,
+           no live data wiring needed.
+
+### T-F09: Settings (theme toggle + language) [x]
+Simple settings panel or sheet: tinta/estudio toggle + es/en toggle.
+Files: app/components/mobile/Settings.tsx
+Done when: theme switch updates CSS vars + map tiles,
+           language switch updates all strings.
+
+---
+
 ## Phase 5 — Consequence Layers (Post-MVP)
 
-### T-029: Food safety timer [ ]
+### T-029: Food safety timer [x]
 Temperature-adjusted thresholds for fridge/freezer/medications.
 Files: app/components/FoodSafetyTimer.tsx
 Done when: timers adjust correctly for ambient temp > 30C.
 
-### T-030: Water supply prediction [ ]
+### T-030: Water supply prediction [x]
 Tank depletion estimate based on outage duration + zone tank size data.
 Files: pipeline/water_predictor.py, app/components/WaterStatus.tsx
 Done when: "70% of users report water loss after 6h" logic verified.
 
-### T-031: Medical vulnerability alerts [ ]
+### T-031: Medical vulnerability alerts [x]
 Local device profile (never sent to server). Push notification
 when prediction score > 60% for user's zone.
 Files: app/components/MedicalAlerts.tsx
 Done when: profile stored in localStorage only, notification triggers
            at correct threshold.
 
-### T-032: Voltage quality / bajones tracker [ ]
+### T-032: Voltage quality / bajones tracker [x]
 Aggregate "unstable" reports to detect instability waves before full outage.
 Files: pipeline/bajon_detector.py, app/components/VoltageStatus.tsx
 Done when: instability wave detected when >5 "unstable" reports
            in 15min window in same zone.
 
-### T-033: Cross-service dashboard [ ]
+### T-033: Cross-service dashboard [x]
 Unified view: electricity + water + internet + cell signal.
 Files: app/components/CrossServiceDashboard.tsx
 Done when: all four services shown with correlated status.
-
-### T-034: Community resilience network [ ]
-Users share nearby resources: generators, water, ice, charging.
-Files: pipeline/resources_collector.py, app/components/ResourceMap.tsx
-Done when: resource reports stored in Supabase, displayed within 1km radius.
-
-### T-035: Economic impact tracker [ ]
-Aggregate business cost reports. Monthly summary generation.
-Files: pipeline/economic_tracker.py, app/components/EconomicImpact.tsx
-Done when: cost fields stored in Supabase, monthly aggregate computed.

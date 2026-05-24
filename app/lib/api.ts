@@ -50,6 +50,9 @@ export interface RegionEntry {
   rationing_pattern:    RationingPattern | null;
   outage?:              OutageInfo;
   crowd?:               CrowdInfo;
+  bajones_15min?:       number | null;
+  wave_detected?:       boolean | null;
+  wave_severity?:       'mild' | 'moderate' | 'severe' | null;
 }
 
 export interface StatusJson {
@@ -62,7 +65,7 @@ export interface StatusJson {
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
-const STATUS_URL      = process.env.NEXT_PUBLIC_STATUS_URL      ?? '';
+const STATUS_URL      = process.env.NEXT_PUBLIC_STATUS_URL      ?? '/status.json';
 const SUPABASE_URL    = process.env.NEXT_PUBLIC_SUPABASE_URL    ?? '';
 const SUPABASE_KEY    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const DEFAULT_REFRESH_MS = 10 * 60 * 1000;

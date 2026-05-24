@@ -51,7 +51,6 @@ Node: next, react, react-dom, leaflet, react-leaflet, typescript,
 - Never push to git
 - Never modify the database schema without updating /docs/ARCHITECTURE.md
 - Never add a Python dependency not in the list above without approval
-- Never implement Phase 5 features (Telegram bot, mobile app, economic tracker)
 - Never use device_fingerprint in validation logic until Phase 4 stability analysis is complete (ADR-005)
 - Never use service_role key in frontend code (ADR-007)
 - Never expose SUPABASE_SERVICE_ROLE_KEY in any client-side file

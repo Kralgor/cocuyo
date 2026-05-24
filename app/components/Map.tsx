@@ -1,116 +1,129 @@
-// Lazy-loaded via next/dynamic (ssr: false) in pages/index.tsx.
-// Never imported directly — always via the dynamic() wrapper.
+// Lazy-loaded via next/dynamic (ssr: false) — never import directly.
+// Prefetched via requestIdleCallback in pages/index.tsx after initial paint.
 
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { RegionEntry } from '../lib/api';
+import type { Theme } from '../lib/theme';
+import { statusColor } from '../lib/theme';
 
-// ── colour mapping ────────────────────────────────────────────────────────────
-// Phase 1: only no_data (grey) and unverified_reports (blue) ever appear.
-// Phase 2+ statuses defined here so T-007 needn't be rewritten when phase changes.
-const STATUS_COLORS: Record<string, string> = {
-  no_data:            '#9e9e9e',  // grey  — Phase 1
-  unverified_reports: '#1976d2',  // blue  — Phase 1
-  normal:             '#43a047',  // green — Phase 2+
-  at_risk:            '#fdd835',  // yellow
-  likely_outage:      '#fb8c00',  // orange
-  confirmed_outage:   '#e53935',  // red
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  no_data:            'Sin datos',
-  unverified_reports: 'Reportes sin verificar',
-  normal:             'Normal',
-  at_risk:            'En riesgo',
-  likely_outage:      'Posible apagón',
-  confirmed_outage:   'Apagón confirmado',
-};
-
-function regionColor(status: string): string {
-  return STATUS_COLORS[status] ?? '#9e9e9e';
-}
-
-export type { RegionEntry };
-
-// ── region coordinates (mirrors pipeline/regions.py) ──────────────────────────
+// ── Region coordinates (mirrors pipeline/regions.py) ─────────────────────────
 const REGION_COORDS: Record<string, [number, number]> = {
-  maracaibo:        [10.6427, -71.6125],
-  san_cristobal:    [ 7.7669, -72.2311],
-  merida:           [ 8.5897, -71.1440],
-  valera:           [ 9.3197, -70.6068],
-  barquisimeto:     [10.0647, -69.3571],
-  punto_fijo:       [11.7069, -70.2153],
-  valencia:         [10.1579, -68.0075],
-  maracay:          [10.2469, -67.5958],
-  caracas:          [10.4806, -66.9036],
-  los_teques:       [10.3432, -67.0448],
-  guarenas_guatire: [10.4667, -66.5333],
-  barinas:          [ 8.6226, -70.2075],
-  maturin:          [ 9.7458, -63.1833],
-  barcelona:        [10.1337, -64.6864],
-  cumana:           [10.4631, -64.1731],
-  porlamar:         [10.9578, -63.8497],
-  ciudad_guayana:   [ 8.3667, -62.6500],
+  maracaibo:         [10.6427, -71.6125],
+  san_cristobal:     [ 7.7669, -72.2311],
+  merida:            [ 8.5897, -71.1440],
+  valera:            [ 9.3197, -70.6068],
+  barquisimeto:      [10.0647, -69.3571],
+  punto_fijo:        [11.7069, -70.2153],
+  valencia:          [10.1579, -68.0075],
+  maracay:           [10.2469, -67.5958],
+  caracas:           [10.4806, -66.9036],
+  los_teques:        [10.3432, -67.0448],
+  guarenas_guatire:  [10.4667, -66.5333],
+  barinas:           [ 8.6226, -70.2075],
+  maturin:           [ 9.7458, -63.1833],
+  barcelona:         [10.1337, -64.6864],
+  cumana:            [10.4631, -64.1731],
+  porlamar:          [10.9578, -63.8497],
+  ciudad_guayana:    [ 8.3667, -62.6500],
 };
 
-// ── hardcoded mock (replaced by live data from api.ts in T-009) ───────────────
 const MOCK_REGIONS: Record<string, RegionEntry> = Object.fromEntries(
-  Object.keys(REGION_COORDS).map((key) => [
-    key,
-    {
-      display_name:        key.replace(/_/g, ' '),
-      current_score:       null,
-      prediction_score:    null,
-      status:              'no_data',
-      signals:             { internet: null, satellite: null, crowdsource: null, weather: null },
-      crowd_reports_30min: 0,
-      prediction_text:     null,
-      rationing_pattern:   null,
-    },
-  ])
+  Object.keys(REGION_COORDS).map(key => [key, {
+    display_name:        key.replace(/_/g, ' '),
+    current_score:       null,
+    prediction_score:    null,
+    status:              'no_data',
+    signals:             { internet: null, satellite: null, crowdsource: null, weather: null },
+    crowd_reports_30min: 0,
+    prediction_text:     null,
+    rationing_pattern:   null,
+  }])
 );
 
-// ── component ─────────────────────────────────────────────────────────────────
-interface MapProps {
-  regions?: Record<string, RegionEntry>;
+// ── Firefly DivIcon ───────────────────────────────────────────────────────────
+function fireflyIcon(color: string, pulse: boolean): L.DivIcon {
+  const size = 18;
+  const dot  = size - 6;
+  const ring = `
+    <div class="lf-pulse-ring" style="
+      position:absolute;inset:0;border-radius:50%;
+      border:2px solid ${color};opacity:0.65;
+    "></div>
+  `;
+  const html = `
+    <div style="position:relative;width:${size}px;height:${size}px;cursor:pointer;">
+      ${pulse ? ring : ''}
+      <div style="
+        position:absolute;
+        top:${(size - dot) / 2}px;left:${(size - dot) / 2}px;
+        width:${dot}px;height:${dot}px;
+        border-radius:50%;background:${color};opacity:0.9;
+      "></div>
+    </div>
+  `;
+  return L.divIcon({
+    html,
+    className: '',
+    iconSize:   [size, size],
+    iconAnchor: [size / 2, size / 2],
+    tooltipAnchor: [size / 2, -size / 2],
+  });
 }
 
-export default function Map({ regions = MOCK_REGIONS }: MapProps) {
+// ── TileLayer updater — swaps tile URL when theme changes ─────────────────────
+function TileLayerUpdater({ url, attribution }: { url: string; attribution: string }) {
+  return <TileLayer key={url} url={url} attribution={attribution} />;
+}
+
+// ── Map props ─────────────────────────────────────────────────────────────────
+interface MapProps {
+  regions?:      Record<string, RegionEntry>;
+  theme:         Theme;
+  onMarkerTap?:  (regionKey: string) => void;
+}
+
+export default function Map({ regions = MOCK_REGIONS, theme: t, onMarkerTap }: MapProps) {
+  const hasOutage = (status: string) =>
+    status === 'unverified_reports' ||
+    status === 'likely_outage'      ||
+    status === 'confirmed_outage';
+
   return (
     <MapContainer
       center={[8.5, -66.0]}
       zoom={6}
-      style={{ height: '450px', width: '100%', borderRadius: '8px' }}
+      style={{ height: '440px', width: '100%', background: t.bg }}
       scrollWheelZoom={false}
+      zoomControl={true}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayerUpdater url={t.tileUrl} attribution={t.tileAttr} />
+
       {Object.entries(regions).map(([key, data]) => {
         const coords = REGION_COORDS[key];
         if (!coords) return null;
-        const color = regionColor(data.status);
+
+        const color  = statusColor(data.status, t);
+        const pulse  = hasOutage(data.status);
+
         return (
-          <CircleMarker
+          <Marker
             key={key}
-            center={coords}
-            radius={10}
-            pathOptions={{ color, fillColor: color, fillOpacity: 0.7, weight: 2 }}
+            position={coords}
+            icon={fireflyIcon(color, pulse)}
+            eventHandlers={onMarkerTap ? { click: () => onMarkerTap(key) } : {}}
           >
-            <Tooltip>
-              <strong>{data.display_name}</strong>
-              <br />
-              {STATUS_LABELS[data.status] ?? data.status}
-              {data.crowd_reports_30min > 0 && (
-                <>
-                  <br />
-                  {data.crowd_reports_30min} reporte
-                  {data.crowd_reports_30min !== 1 ? 's' : ''} (30&nbsp;min)
-                </>
-              )}
+            <Tooltip direction="top" offset={[0, -6]}>
+              <span style={{ fontFamily: 'system-ui', fontSize: 12 }}>
+                <strong>{data.display_name}</strong>
+                {data.crowd_reports_30min > 0 && (
+                  <> · {data.crowd_reports_30min} rep</>
+                )}
+              </span>
             </Tooltip>
-          </CircleMarker>
+          </Marker>
         );
       })}
     </MapContainer>

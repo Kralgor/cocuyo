@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import { useEffect } from 'react';
+import { AppProvider } from '../contexts/AppContext';
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -11,5 +12,11 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, []);
 
-  return <Component {...pageProps} />;
+  return (
+    <div style={{ height: '100%' }}>
+      <AppProvider>
+        <Component {...pageProps} />
+      </AppProvider>
+    </div>
+  );
 }
