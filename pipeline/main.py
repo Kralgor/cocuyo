@@ -161,17 +161,6 @@ def _upload_to_r2(payload: dict) -> None:
         aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
     )
-    s3.put_bucket_cors(
-        Bucket="cocuyo",
-        CORSConfiguration={
-            "CORSRules": [{
-                "AllowedOrigins": ["https://app.cocuyo.kralgor.com"],
-                "AllowedMethods": ["GET", "HEAD"],
-                "AllowedHeaders": ["*"],
-                "MaxAgeSeconds": 3600,
-            }]
-        },
-    )
     s3.put_object(
         Bucket="cocuyo",
         Key="status.json",
