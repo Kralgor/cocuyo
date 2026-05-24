@@ -27,7 +27,7 @@ export default function HistoryStrip({ theme: t, days, width = 320, height = 110
   const today = new Date();
 
   return (
-    <svg width={width} height={height + 16} viewBox={`0 0 ${width} ${height + 16}`}>
+    <svg width="100%" height={height + 16} viewBox={`0 0 ${width} ${height + 16}`} preserveAspectRatio="none">
       {/* hour gridlines */}
       {[6, 12, 18].map(h => (
         <line key={h} x1={0} y1={h * rowH} x2={width} y2={h * rowH}

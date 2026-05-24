@@ -56,7 +56,7 @@ export default function FrequencyTrace({
   const ax   = t.accent;
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ display: 'block' }}>
       {/* normal band */}
       <rect x={0} y={mid - height * 0.05} width={width} height={height * 0.10}
         fill={t.ok} opacity={0.06} />

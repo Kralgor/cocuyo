@@ -35,7 +35,7 @@ export default function ForecastCurve({
   const gradId = `fc-grad-${ax.replace('#', '')}`;
 
   return (
-    <svg width={width} height={height + 12} viewBox={`0 0 ${width} ${height + 12}`}>
+    <svg width="100%" height={height + 12} viewBox={`0 0 ${width} ${height + 12}`} preserveAspectRatio="none">
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stopColor={ax} stopOpacity={0.55} />
