@@ -287,7 +287,7 @@ def run(now: datetime | None = None) -> dict:
     if now is None:
         now = datetime.now(timezone.utc)
 
-    phase = int(os.getenv("COCUYO_PHASE", "1"))
+    phase = int(os.getenv("COCUYO_PHASE") or "1")
     collector_errors = 0
     validator = ReportValidator()
 
