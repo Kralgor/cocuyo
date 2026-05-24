@@ -92,3 +92,24 @@ html, body {
   height: 400px;
   background: var(--panel);
 }
+
+/* ── Responsive shell ── */
+.app-outer {
+  justify-content: center;
+}
+
+.app-shell {
+  max-width: 430px;
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .app-shell {
+    max-width: 900px;
+  }
+}

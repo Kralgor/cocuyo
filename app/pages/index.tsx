@@ -182,7 +182,9 @@ const Home: NextPage = () => {
           <meta name="description" content="Monitoreo colaborativo de apagones eléctricos en Venezuela" />
           <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         </Head>
-        <div style={{ minHeight: '100vh', background: '#15130f' }} />
+        <div className="app-outer" style={{ minHeight: '100vh', background: '#15130f', display: 'flex' }}>
+        <div className="app-shell" style={{ minHeight: '100vh', background: '#15130f' }} />
+      </div>
       </>
     );
   }
@@ -195,15 +197,13 @@ const Home: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
 
-      <div style={{
+      <div className="app-outer" style={{
         minHeight: '100vh',
         background: t.panel2,
         display: 'flex',
-        justifyContent: 'center',
       }}>
-        <div style={{
+        <div className="app-shell" style={{
           width: '100%',
-          maxWidth: 430,
           minHeight: '100vh',
           background: t.bg,
           position: 'relative',
