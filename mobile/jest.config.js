@@ -7,6 +7,7 @@ module.exports = {
       '|@react-native(-community)?' +
       '|expo(nent)?' +
       '|@expo(nent)?(/.*)??' +
+      '|expo-modules-core' +
       '|@expo-google-fonts/.*' +
       '|react-navigation' +
       '|@react-navigation/.*' +
