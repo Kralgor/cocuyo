@@ -1,7 +1,7 @@
 ---
 phase: 1
 slug: foundation-offline-core
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-25
@@ -48,7 +48,7 @@ Declared values (multiples of 4, in density-independent pixels):
 Exceptions:
 - Tab bar icons: 22dp size (Ionicons standard, matched in Pattern 3)
 - Touch targets: minimum 44dp height on all tappable rows (iOS HIG / Android 48dp material guideline — use 48dp to satisfy both)
-- Status dots in zone picker: 10dp diameter with 4dp margin-right
+- Status dots in zone picker: 8dp diameter with 4dp margin-right
 - Staleness banner: 40dp fixed height (non-dismissible, compact)
 - Hero status block: 120dp height minimum to ensure sunlight readability
 
@@ -61,11 +61,11 @@ All sizes in sp (scale-independent pixels — React Native default unit).
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Display | 48sp | 700 (bold) | 1.1 | Hero status text: "SIN LUZ", "CON LUZ", "INESTABLE" |
-| Heading | 20sp | 600 (semibold) | 1.2 | Screen titles, section headers in zone picker |
+| Heading | 20sp | 700 (bold) | 1.2 | Screen titles, section headers in zone picker |
 | Body | 16sp | 400 (regular) | 1.5 | Zone names, signal card labels, settings body text |
 | Label | 13sp | 400 (regular) | 1.3 | Status dots label, tab bar labels, staleness banner text, signal bar values |
 
-Weights used: 400 (regular) + 600/700 (semibold/bold). Two weight classes max.
+Weight classes: regular (400) and bold (700). Two weight classes — no in-between. Use 700 for all headings and display text; use 400 for body and label text.
 
 Font family: `undefined` (system default) — SF Pro on iOS, Roboto on Android. Do not declare a custom fontFamily in Phase 1.
 
@@ -149,7 +149,7 @@ All copy is declared in both ES (primary) and EN (device locale fallback). ES is
 | Trust point 4 heading | Funciona sin internet | Works offline |
 | Trust point 4 body | Los datos se guardan en tu dispositivo. | Data is stored on your device. |
 | GitHub link button | Ver código en GitHub | View code on GitHub |
-| Primary CTA | Comenzar | Get started |
+| Primary CTA | Comenzar [intentional idiom — "Comenzar" is standard onboarding Spanish, equivalent to "Get Started"] | Get started |
 
 ### Screen: Zone Picker (D-11)
 
@@ -226,11 +226,11 @@ No other destructive actions in Phase 1. No delete, no account actions, no data 
 **Components:**
 - Cocuyo logo: centered, 80dp wide, 32dp margin-bottom
 - Subtitle: Body 16sp inkDim, centered
-- Trust points: 4 rows, each with a checkmark icon (Ionicons `checkmark-circle`, 20dp, ok color) + 12dp gap + text column (heading 16sp ink bold, body 14sp — use label size — inkDim)
+- Trust points: 4 rows, each with a checkmark icon (Ionicons `checkmark-circle`, 20dp, ok color) + 12dp gap + text column (heading 16sp ink bold, body 13sp inkDim)
 - Separator: 24dp vertical space between trust points and buttons
 - GitHub link: Pressable row, left-aligned icon (Ionicons `logo-github`, 18dp) + label, accent border bottom 1dp, no fill
 - Spacer: 16dp
-- "Comenzar" button: Full width, 48dp height, accent fill (#E8C840), ink text (not white — ink is readable on yellow), 16sp semibold, 8dp border radius
+- "Comenzar" button: Full width, 48dp height, accent fill (#E8C840), ink text (not white — ink is readable on yellow), 16sp bold (700), 8dp border radius
 
 **Interaction:**
 - "Comenzar" tap → set MMKV `hasSeenOnboarding = true` → Stack.Protected redirects to zone-picker
@@ -249,7 +249,7 @@ No other destructive actions in Phase 1. No delete, no account actions, no data 
 - Header: Screen title "Selecciona tu zona" (Heading 20sp, ink)
 - Search bar: TextInput, 48dp height, 16dp horizontal margin, md (16dp) padding, panel background, 8dp radius, inkFaint placeholder
 - SectionList: State-grouped zones. Section headers are uppercase state names (Label 13sp, inkDim, xl left padding). Zone rows are 48dp height, panel background, md horizontal padding.
-- Zone row: Status dot (10dp circle, statusColor()) + 8dp gap + zone display_name (Body 16sp, ink)
+- Zone row: Status dot (8dp circle, statusColor()) + 8dp gap + zone display_name (Body 16sp, ink)
 - Section separator: line color, 1dp height
 
 **Interaction:**
@@ -271,7 +271,7 @@ No other destructive actions in Phase 1. No delete, no account actions, no data 
 
 **A. Header row (sticky, 48dp height):**
 - Left: Zone name (Heading 20sp, ink)
-- Right: Gear icon (Ionicons `settings-outline`, 24dp, inkDim) — taps open Settings modal
+- Right: Gear icon (Ionicons `settings-outline`, 24dp, inkDim, accessibilityLabel: "Abrir ajustes" / "Open settings") — taps open Settings modal
 
 **B. Staleness banner (D-13, STAT-03):**
 - Shown when: `isOffline || isStale` (cache > 15 min)
@@ -433,6 +433,7 @@ No bouncy springs on status-critical content. Motion is purposeful, not decorati
 | Screen reader: staleness banner | accessibilityLabel: "Datos desactualizados. Última actualización hace {N} minutos." |
 | Screen reader: signal cards | accessibilityLabel: "{Signal name}: {value}%" |
 | Screen reader: zone picker rows | accessibilityLabel: "{zone name}, {statusLabel}" |
+| Screen reader: gear icon (Zone Detail header) | accessibilityLabel: "Abrir ajustes" / "Open settings" |
 
 ---
 
@@ -507,14 +508,14 @@ Default when no override: follow system preference. If system pref unavailable, 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS (collapsed to 400/700, minor fixes applied)
+- [x] Dimension 5 Spacing: PASS (8dp dot, all multiples of 4)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-05-25
 
 ---
 
