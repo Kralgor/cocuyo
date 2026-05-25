@@ -8,6 +8,7 @@ module.exports = {
       '|expo(nent)?' +
       '|@expo(nent)?(/.*)??' +
       '|expo-modules-core' +
+      '|expo-splash-screen' +
       '|@expo-google-fonts/.*' +
       '|react-navigation' +
       '|@react-navigation/.*' +
