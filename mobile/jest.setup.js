@@ -15,6 +15,10 @@ jest.mock('react-native-mmkv', () => {
       delete: (key) => {
         delete store[key];
       },
+      // MMKV v4 uses remove() not delete() — both exposed in mock for compatibility
+      remove: (key) => {
+        delete store[key];
+      },
     };
   }
   return {
