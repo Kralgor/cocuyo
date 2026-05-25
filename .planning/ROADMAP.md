@@ -35,7 +35,7 @@ Plans:
 - [ ] 01-01-PLAN.md — Scaffold Expo SDK 56 + config + core lib (api/storage/regions/i18n/theme/query) + test harness
 - [x] 01-02-PLAN.md — Theme context, hooks (useStatus/useOffline/useTheme), root layout (Stack.Protected), 5-tab bar + placeholders
 - [x] 01-03-PLAN.md — Trust onboarding screen + zone picker (state-grouped, searchable, status dots)
-- [ ] 01-04-PLAN.md — Zone detail (hero/duration/staleness/signal cards) + settings modal (privacy/GitHub)
+- [x] 01-04-PLAN.md — Zone detail (hero/duration/staleness/signal cards) + settings modal (privacy/GitHub)
 - [ ] 01-05-PLAN.md — EAS dev builds (Android/iOS) + OTA + on-device verification gate
 **UI hint**: yes
 
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Offline Core | 4/6 | In Progress|  |
+| 1. Foundation + Offline Core | 5/6 | In Progress|  |
 | 2. Reporting + Sharing + Quick Wins | 0/TBD | Not started | - |
 | 3. Push Notifications | 0/TBD | Not started | - |
 | 4. Food Spoilage Timers | 0/TBD | Not started | - |
