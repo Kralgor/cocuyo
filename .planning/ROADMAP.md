@@ -30,7 +30,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can view cached status data when offline, with a visible staleness banner if cache is older than 15 minutes
   4. User sees trust onboarding screen on first launch explaining open source status, anonymity, and non-government affiliation
   5. User can access privacy and open-source section in settings with a working GitHub link
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold Expo SDK 56 + config + core lib (api/storage/regions/i18n/theme/query) + test harness
+- [ ] 01-02-PLAN.md — Theme context, hooks (useStatus/useOffline/useTheme), root layout (Stack.Protected), 5-tab bar + placeholders
+- [ ] 01-03-PLAN.md — Trust onboarding screen + zone picker (state-grouped, searchable, status dots)
+- [ ] 01-04-PLAN.md — Zone detail (hero/duration/staleness/signal cards) + settings modal (privacy/GitHub)
+- [ ] 01-05-PLAN.md — EAS dev builds (Android/iOS) + OTA + on-device verification gate
 **UI hint**: yes
 
 ### Phase 2: Reporting + Sharing + Quick Wins
@@ -88,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Offline Core | 0/TBD | Not started | - |
+| 1. Foundation + Offline Core | 0/5 | Planned | - |
 | 2. Reporting + Sharing + Quick Wins | 0/TBD | Not started | - |
 | 3. Push Notifications | 0/TBD | Not started | - |
 | 4. Food Spoilage Timers | 0/TBD | Not started | - |
@@ -96,4 +102,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 ---
 *Roadmap created: 2026-05-25*
-*Last updated: 2026-05-25 after initial creation*
+*Last updated: 2026-05-25 after Phase 1 planning — 5 plans created*
