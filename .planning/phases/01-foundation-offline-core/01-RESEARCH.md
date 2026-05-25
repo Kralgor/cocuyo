@@ -802,22 +802,25 @@ export async function fetchStatus(): Promise<{ data: StatusJson | null; offline:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **iOS 15 vs SDK 56 default of 16.4**
+1. **iOS 15 vs SDK 56 default of 16.4** — **(RESOLVED)**
    - What we know: Expo SDK 56 defaulted iOS min to 16.4. expo-build-properties can override `deploymentTarget`.
    - What's unclear: Whether React Native 0.85 itself supports iOS 15.0 at the C++ level, or whether 16.4 is also a React Native constraint.
    - Recommendation: Set `deploymentTarget: "15.0"` and run `npx expo-doctor` post-install. If expo-doctor flags it, accept 16.4 and update PLAT-02 constraint with Leo.
+   - **(RESOLVED):** Set `ios.deploymentTarget` to `"15.0"` via the `expo-build-properties` plugin in app.json (implemented in Plan 01-01a Task 1). Plan 01-05 Task 1 runs `npx expo-doctor`; if iOS 15.0 is flagged unachievable, the human-verify checkpoint records the decision to accept 16.4 and update PLAT-02 with Leo. Decision deferred to the on-device build gate, with 15.0 as the default attempt.
 
-2. **EAS Project ID for status.json URL**
+2. **EAS Project ID for status.json URL** — **(RESOLVED)**
    - What we know: EAS Update URL requires a project ID from `eas.json` / `app.json`.
    - What's unclear: Whether Leo has an existing EAS account/project for Cocuyo Mobile.
    - Recommendation: Run `eas init` in Wave 0 to create the EAS project; it auto-populates `extra.eas.projectId`.
+   - **(RESOLVED):** Run `eas init` in Plan 01-01a Task 1 (Wave 1) to create the EAS project and auto-populate `extra.eas.projectId` + the `updates.url` project ID. If `eas` auth fails, the task surfaces an auth checkpoint for Leo to run `eas login`.
 
-3. **CDN URL for status.json in mobile**
+3. **CDN URL for status.json in mobile** — **(RESOLVED)**
    - What we know: Web app uses `NEXT_PUBLIC_STATUS_URL` env var.
    - What's unclear: Expo environment variable strategy for the CDN URL (hardcode vs Expo config plugin vs `app.json` extra).
    - Recommendation: Use `app.json` `extra.statusCdnUrl` + `Constants.expoConfig.extra.statusCdnUrl` in `lib/api.ts`. Confirmed by `expo-constants` docs.
+   - **(RESOLVED):** Set `extra.statusCdnUrl` = `"https://cdn.cocuyo.app/status.json"` in app.json (Plan 01-01a Task 1) and read it via `Constants.expoConfig?.extra?.statusCdnUrl` in `mobile/lib/api.ts` (Plan 01-01b Task 1), with the same string as a hardcoded fallback. Confirmed by `expo-constants` docs.
 
 ---
 
@@ -952,3 +955,4 @@ export async function fetchStatus(): Promise<{ data: StatusJson | null; offline:
 
 **Research date:** 2026-05-25
 **Valid until:** 2026-06-25 (Expo SDK 57 expected ~Q3 2026; SDK 56 is stable)
+</content>

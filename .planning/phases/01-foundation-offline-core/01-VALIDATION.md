@@ -2,7 +2,7 @@
 phase: 1
 slug: foundation-offline-core
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-05-25
 ---
@@ -39,11 +39,11 @@ created: 2026-05-25
 | Task ID | Plan | Wave | Requirement | Secure Behavior | Test Type | Automated Command | Status |
 |---------|------|------|-------------|-----------------|-----------|-------------------|--------|
 | status-color-map | scaffold | 1 | STAT-01 | N/A | unit | `npx jest statusColor` | ⬜ pending |
-| duration-calc | scaffold | 1 | STAT-02 | N/A | unit | `npx jest duration` | ⬜ pending |
-| cache-staleness | cache | 1 | STAT-03 | N/A | unit | `npx jest staleness` | ⬜ pending |
+| duration-calc | scaffold | 1 | STAT-02 | N/A | unit | `npx jest i18n` | ⬜ pending |
+| cache-staleness | cache | 1 | STAT-03 | N/A | unit | `npx jest useOffline` | ⬜ pending |
 | region-filter | zone-picker | 1 | STAT-01 | N/A | unit | `npx jest regionFilter` | ⬜ pending |
 | i18n-lookup | i18n | 1 | TRST-01 | N/A | unit | `npx jest i18n` | ⬜ pending |
-| onboarding-flag | onboarding | 1 | TRST-01 | N/A | unit | `npx jest onboarding` | ⬜ pending |
+| onboarding-flag | navigation | 2 | TRST-01 | N/A | unit | `npx jest routing` | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,12 +52,11 @@ created: 2026-05-25
 ## Wave 0 Requirements
 
 - [ ] `mobile/jest.config.js` — Jest config with Expo preset
-- [ ] `mobile/__tests__/statusColor.test.ts` — stub: status value → color/label mapping
-- [ ] `mobile/__tests__/duration.test.ts` — stub: outageSince ISO string → "Hace Xh Ym" string
-- [ ] `mobile/__tests__/staleness.test.ts` — stub: cache timestamp + now → isStale boolean (>15 min)
-- [ ] `mobile/__tests__/regionFilter.test.ts` — stub: search string → filtered region list
-- [ ] `mobile/__tests__/i18n.test.ts` — stub: locale string + key → translated string
-- [ ] `mobile/__tests__/onboarding.test.ts` — stub: MMKV hasSeenOnboarding flag → navigation guard
+- [ ] `mobile/__tests__/lib/statusColor.test.ts` — stub: status value → color/label mapping
+- [ ] `mobile/__tests__/hooks/useOffline.test.ts` — stub: cache timestamp + now → isStale boolean (>15 min); also covers staleness sampling (STAT-03)
+- [ ] `mobile/__tests__/lib/regionFilter.test.ts` — stub: search string → filtered region list
+- [ ] `mobile/__tests__/lib/i18n.test.ts` — stub: locale string + key → translated string
+- [ ] `mobile/__tests__/navigation/routing.test.ts` — stub: MMKV hasSeenOnboarding flag → navigation guard (equivalent TRST-01 coverage; supersedes the flat onboarding.test.ts filename)
 
 ---
 
