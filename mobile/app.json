@@ -4,7 +4,10 @@
     "slug": "cocuyo",
     "scheme": "cocuyo",
     "version": "1.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
@@ -12,7 +15,6 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/[EAS_PROJECT_ID]",
       "enabled": true,
       "fallbackToCacheTimeout": 0
     },
@@ -52,20 +54,26 @@
       [
         "expo-build-properties",
         {
-          "android": { "minSdkVersion": 24 },
-          "ios": { "deploymentTarget": "16.4" }
+          "android": {
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
         }
       ]
     ],
     "extra": {
       "statusCdnUrl": "https://cdn.cocuyo.app/status.json",
+      "router": {},
       "eas": {
-        "projectId": "[EAS_PROJECT_ID]"
+        "projectId": "53f480cb-b4e4-420e-8be7-c36e78bc914c"
       }
     },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "kralgor"
   }
 }
