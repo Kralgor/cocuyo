@@ -1,6 +1,7 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from 'expo-router';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { useMMKVBoolean, useMMKVString } from 'react-native-mmkv';
 import { queryClient, persister } from '@/lib/query';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -29,13 +30,17 @@ export function resolveInitialRoute(
 // ── RootLayout ─────────────────────────────────────────────────────────────────
 // Root layout: wraps the entire app in PersistQueryClientProvider and ThemeProvider.
 // Stack.Protected provides declarative routing — no manual router.replace() calls.
-// Guards read MMKV synchronously in render body (Pitfall 2 — no useState/await).
+//
+// Guards read MMKV via reactive hooks (useMMKVBoolean/useMMKVString) so a
+// storage.set() in onboarding/zone-picker triggers a re-render here and the
+// guards re-evaluate. Plain storage.getBoolean() reads are NOT reactive — a
+// write would not advance the flow (CR-01).
 export default function RootLayout() {
-  // ── MMKV guards — synchronous reads, no await needed (RESEARCH.md Pitfall 2) ──
-  const hasSeenOnboarding: boolean =
-    storage.getBoolean(STORAGE_KEYS.hasSeenOnboarding) ?? false;
-  const selectedZone: string | null =
-    storage.getString(STORAGE_KEYS.selectedZone) ?? null;
+  // ── reactive MMKV guards — write in a screen re-renders this layout ──────────
+  const [hasSeenOnboarding] = useMMKVBoolean(STORAGE_KEYS.hasSeenOnboarding, storage);
+  const [selectedZone] = useMMKVString(STORAGE_KEYS.selectedZone, storage);
+
+  const route = resolveInitialRoute(!!hasSeenOnboarding, selectedZone ?? null);
 
   return (
     <PersistQueryClientProvider
@@ -53,17 +58,17 @@ export default function RootLayout() {
       <ThemeProvider>
         <Stack screenOptions={{ headerShown: false }}>
           {/* Onboarding: shown only when trust screen has not been seen */}
-          <Stack.Protected guard={!hasSeenOnboarding}>
+          <Stack.Protected guard={route === 'onboarding'}>
             <Stack.Screen name="onboarding" />
           </Stack.Protected>
 
           {/* Zone picker: shown after onboarding, before zone is selected */}
-          <Stack.Protected guard={hasSeenOnboarding && !selectedZone}>
+          <Stack.Protected guard={route === 'zone-picker'}>
             <Stack.Screen name="zone-picker" />
           </Stack.Protected>
 
           {/* Main tabs: shown when onboarding is done and a zone is selected */}
-          <Stack.Protected guard={hasSeenOnboarding && !!selectedZone}>
+          <Stack.Protected guard={route === 'tabs'}>
             <Stack.Screen name="(tabs)" />
           </Stack.Protected>
         </Stack>

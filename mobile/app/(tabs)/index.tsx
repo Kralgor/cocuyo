@@ -54,7 +54,7 @@ export default function ZoneScreen() {
   const { theme }                    = useTheme();
   const lang                         = detectLang();
   const { data, isLoading, isError, refetch } = useStatus();
-  const { isOffline, isStale, ageMinutes }    = useOffline();
+  const { isOffline, isStale, hasCache, ageMinutes } = useOffline();
   const [settingsOpen, setSettingsOpen]       = useState(false);
   const [refreshing,   setRefreshing]         = useState(false);
 
@@ -67,12 +67,20 @@ export default function ZoneScreen() {
   // ── pull-to-refresh ───────────────────────────────────────────────────────
   async function handleRefresh() {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    // try/finally — refetch() rejects when the query errors after retries;
+    // without finally the spinner sticks on failure (WR-03).
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   const styles     = createStyles(theme);
-  const showBanner = isOffline || isStale;
+  // Gate on hasCache: before any successful fetch there is no real "last update"
+  // to report, so a stale/offline banner would show epoch-scale age (CR-02).
+  // First-launch-no-data is handled by showFirstError below.
+  const showBanner = (isOffline || isStale) && hasCache;
 
   // ── state: skeleton / error / loaded ─────────────────────────────────────
   const showSkeleton    = isLoading && !region;

@@ -1,22 +1,10 @@
 // Tests for useOffline staleness logic.
-// The hook itself wraps useNetInfo + MMKV reads — we test the pure staleness
-// computation directly by importing storage and exercising the same logic path.
-// renderHook is not available (no @testing-library/react-native installed).
+// We import the hook's OWN pure helper (computeStaleness) rather than mirroring
+// it here — a re-implemented mirror previously stayed green through the CR-02
+// epoch-age bug. renderHook is not available (no @testing-library/react-native).
 
 import { storage, STORAGE_KEYS } from '../../lib/storage';
-
-// ── staleness logic (mirrors useOffline implementation) ───────────────────────
-// Extracted inline so changes to the hook are validated via the hook's actual
-// constants rather than reimplementing them here.
-const STALE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes per D-13
-
-function computeStaleness(lastFetch: number): { isStale: boolean; ageMinutes: number } {
-  const ageMs = Date.now() - lastFetch;
-  return {
-    isStale:    ageMs > STALE_THRESHOLD_MS,
-    ageMinutes: Math.floor(ageMs / 60_000),
-  };
-}
+import { computeStaleness, STALE_THRESHOLD_MS } from '../../hooks/useOffline';
 
 describe('useOffline staleness logic', () => {
   // ── isStale ────────────────────────────────────────────────────────────────
@@ -33,12 +21,6 @@ describe('useOffline staleness logic', () => {
     expect(isStale).toBe(false);
   });
 
-  it('isStale=true when no fetch has occurred (lastFetch=0)', () => {
-    // Default when MMKV key is absent — ?? 0 in hook
-    const { isStale } = computeStaleness(0);
-    expect(isStale).toBe(true);
-  });
-
   it('isStale=false when cache is 14 minutes old (below 15-min threshold)', () => {
     const lastFetch = Date.now() - 14 * 60 * 1000;
     const { isStale } = computeStaleness(lastFetch);
@@ -46,9 +28,32 @@ describe('useOffline staleness logic', () => {
   });
 
   it('isStale=true when cache is exactly 15 minutes and 1 second old', () => {
-    const lastFetch = Date.now() - (15 * 60 * 1000 + 1000);
+    const lastFetch = Date.now() - (STALE_THRESHOLD_MS + 1000);
     const { isStale } = computeStaleness(lastFetch);
     expect(isStale).toBe(true);
+  });
+
+  // ── never-fetched state (CR-02 regression) ──────────────────────────────────
+  // A missing/zero timestamp must NOT report an epoch-scale age or a stale cache.
+  // hasCache=false lets the home screen suppress the banner before first fetch.
+
+  it('hasCache=false and ageMinutes=0 when no fetch has occurred (undefined)', () => {
+    const { hasCache, isStale, ageMinutes } = computeStaleness(undefined);
+    expect(hasCache).toBe(false);
+    expect(isStale).toBe(false);
+    expect(ageMinutes).toBe(0);
+  });
+
+  it('hasCache=false and ageMinutes=0 when timestamp is 0 (legacy fallback)', () => {
+    const { hasCache, isStale, ageMinutes } = computeStaleness(0);
+    expect(hasCache).toBe(false);
+    expect(isStale).toBe(false);
+    expect(ageMinutes).toBe(0);
+  });
+
+  it('hasCache=true once a real timestamp exists', () => {
+    const { hasCache } = computeStaleness(Date.now());
+    expect(hasCache).toBe(true);
   });
 
   // ── ageMinutes ─────────────────────────────────────────────────────────────

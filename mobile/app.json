@@ -15,6 +15,7 @@
       "policy": "appVersion"
     },
     "updates": {
+      "url": "https://u.expo.dev/53f480cb-b4e4-420e-8be7-c36e78bc914c",
       "enabled": true,
       "fallbackToCacheTimeout": 0
     },
@@ -32,7 +33,10 @@
     "ios": {
       "bundleIdentifier": "app.cocuyo.mobile",
       "buildNumber": "1",
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "output": "static",
