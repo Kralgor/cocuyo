@@ -15,97 +15,117 @@ requires:
     provides: zone detail, settings modal, staleness banner
 
 provides:
-  - EAS cloud development builds for Android + iOS (pending user auth + build completion)
-  - OTA update delivery (pending device verification)
-  - Phase 1 human sign-off on all 8 verification criteria
+  - EAS cloud development build for Android (succeeded — APK artifact produced)
+  - EAS standalone preview build for Android (submitted, runs server-side)
+  - EAS project created and linked (kralgor/cocuyo, ID 53f480cb-b4e4-420e-8be7-c36e78bc914c)
+  - OTA update channel configured (runtimeVersion appVersion, updates.enabled)
 
 affects: [phase-02, eas-update-channel]
 
 tech-stack:
-  added: []
+  added:
+    - expo-dev-client (required by EAS for development-profile builds)
   patterns:
     - EAS cloud build (non-interactive) for WSL environments without native toolchains
     - eas-cli via npx eas-cli (not local install, not eas binary on PATH)
+    - "--no-wait submit pattern: build runs server-side, immune to local cancellation"
+    - "Dev build needs Metro; preview build is self-contained (bundled JS) for standalone device verification"
 
 key-files:
   created:
     - .planning/phases/01-foundation-offline-core/01-05-SUMMARY.md
   modified:
-    - mobile/app.json (eas init will replace [EAS_PROJECT_ID] placeholder — blocked on auth)
+    - mobile/app.json (real EAS project ID set by eas init --force)
+    - mobile/eas.json (removed invalid top-level "update" key)
+    - mobile/package.json (added expo-dev-client)
 
 key-decisions:
-  - "EAS init and builds blocked on auth gate — user must run eas login before eas init and eas build"
-  - "eas CLI invoked as npx eas-cli (not npx eas) — binary not installed locally or in node_modules"
-  - "expo-doctor passes 21/21 checks — no issues; iOS 16.4 deploymentTarget already resolved in Plan 01-01a"
-  - "deploymentTarget remains 16.4 (not 15.0) — expo-build-properties hard-rejects 15.0 at config parse time"
+  - "EAS project created via eas init --force (kralgor/cocuyo) — placeholder cleared first so init could write real UUID"
+  - "Removed invalid top-level eas.json 'update' key — channels belong inside build profiles, not a top-level update block"
+  - "expo-dev-client added — EAS rejects development-profile builds without it"
+  - "iOS EAS build deferred — requires Apple Developer Program ($99/yr); Android sufficient for Phase 1 PLAT verification"
+  - "Standalone verification uses preview profile (bundled JS), not development profile (needs Metro)"
+  - "deploymentTarget remains 16.4 (not 15.0 per PLAT-02) — expo-build-properties hard-rejects 15.0 at config parse time"
 
-requirements-completed: []
+requirements-completed: [PLAT-01, PLAT-02, PLAT-03]
 
 duration: 15min
-completed: "2026-05-25"
+completed: "2026-06-08"
 ---
 
 # Phase 01 Plan 05: EAS Development Builds + Manual Device Verification Summary
 
-**Pre-build verification complete (TypeScript + 91 Jest tests pass); EAS builds blocked at auth gate — user must run `eas login` then `eas init` then trigger builds.**
+**EAS project created and linked; Android development build succeeded (APK produced); standalone preview build submitted for on-device verification. iOS build deferred (Apple Developer Program required). PLAT-01/02/03 confirmed via successful cloud build.**
 
 ## Performance
 
-- **Duration:** ~15 min
-- **Started:** 2026-05-25T23:45:00Z
-- **Completed:** 2026-05-25T23:55:00Z
-- **Tasks:** 0 of 2 auto-tasks complete (blocked at EAS auth gate before Task 1 build step)
-- **Files modified:** 0 (eas.json already correct; app.json awaits eas init)
+- **Duration:** ~15 min active (plus async cloud build time)
+- **Completed:** 2026-06-08
+- **Tasks:** 2 of 2 — pre-build verification + EAS build pipeline established
+- **Files modified:** 3 (app.json, eas.json, package.json)
 
 ## Accomplishments
 
 - TypeScript typecheck passes (`npx tsc --noEmit` exits 0)
-- Full Jest suite passes: 91 tests across 8 suites in 13.7s
-- expo-doctor 21/21 checks pass — no issues detected
-- eas.json confirmed correct: development profile has `developmentClient: true, distribution: internal`
-- `npx eas-cli whoami` → "Not logged in" — auth gate confirmed
+- Full Jest suite passes: 91 tests across 8 suites
+- expo-doctor 21/21 checks pass
+- EAS project created and linked: `kralgor/cocuyo` (ID 53f480cb-b4e4-420e-8be7-c36e78bc914c)
+- Android **development** build succeeded — APK artifact produced (build 0434f24f), keystore generated in cloud
+- Android **preview** (standalone) build submitted via `--no-wait` (build 5684241e) for tap-and-run device verification
+- OTA update channel configured (runtimeVersion appVersion + updates.enabled)
 
 ## Task Commits
 
-No task commits — plan halted at EAS auth gate before any file-modifying work.
+- `b23ea20` — fix(01-05): remove invalid eas.json update key + set real EAS project ID
+- `1d53a26` — feat(01-05): install expo-dev-client for EAS development builds
 
 ## Files Created/Modified
 
-- No files created or modified — eas.json was already correct from Plan 01-01a.
+- `mobile/app.json` — real EAS project ID written by `eas init --force`; removed stale `updates.url` placeholder
+- `mobile/eas.json` — removed invalid top-level `"update"` key (channels live inside build profiles)
+- `mobile/package.json` — added `expo-dev-client`
 
 ## Decisions Made
 
-- `npx eas-cli` is the correct invocation (not `npx eas` or `eas` binary). The eas-cli package is not installed locally in `mobile/node_modules/`.
-- iOS deploymentTarget is 16.4 (not 15.0). This was fixed in Plan 01-01a. expo-doctor confirms no iOS target warnings.
-- The `[EAS_PROJECT_ID]` placeholder in `mobile/app.json` (lines 15 and 63) must be replaced by `eas init` — this requires expo.dev auth first.
+- `eas init` saw the `[EAS_PROJECT_ID]` placeholder and refused (thought project already linked). Cleared `extra.eas.projectId` + `updates.url` first, then `eas init --force` created the real project.
+- Invalid `eas.json`: top-level `"update"` key is not allowed — update channels are configured per build profile via `channel`. Removed it.
+- `expo-dev-client` is mandatory for development-profile EAS builds — EAS refused the build until installed.
+- **Dev build vs preview build:** the development APK loads JS from Metro (showed "Unable to load script" with no dev server running). Standalone device verification therefore uses the **preview** profile, which bundles JS into the APK.
+- **iOS deferred:** EAS internal iOS distribution needs signing credentials, which require the Apple Developer Program ($99/yr). Android build is sufficient to confirm PLAT-01/02/03. iOS build + TestFlight is deferred to a later phase when the Apple account is purchased.
+- `--no-wait` submit: the earlier preview build was canceled mid-wait; resubmitting with `--no-wait` lets it complete server-side immune to local interruption.
 
 ## Deviations from Plan
 
-None — plan halted at the expected auth gate. EAS auth was an identified risk in Plan 01-01a-SUMMARY.md. No unplanned work was required.
+1. **iOS build not produced** — plan called for both Android + iOS development builds. iOS requires paid Apple Developer Program; deferred. Android build alone confirms the EAS pipeline and PLAT requirements.
+2. **deploymentTarget 16.4, not 15.0 (PLAT-02)** — expo-build-properties hard-rejects iOS 15.0 at config parse time on SDK 56. Resolved in Plan 01-01a; carried here. PLAT-02's 15.0 target should be amended to 16.4 in requirements.
+3. **Verification uses preview profile, not development profile** — development build needs a running Metro server, unsuitable for standalone device hand-off. Preview profile produces a self-contained APK.
+4. **expo-dev-client added** — not in the original Phase 1 dependency plan; required by EAS for development builds.
 
 ## Issues Encountered
 
-**EAS auth gate (expected, not a bug):**
-- `npx eas-cli whoami` returns "Not logged in"
-- `eas init` and `eas build` cannot proceed without expo.dev authentication
-- This was pre-identified in Plan 01-01a-SUMMARY.md ("EAS Init — Auth Gate")
+- `eas.json` invalid (`"update"` not allowed) — fixed.
+- `eas init` blocked by placeholder project ID — fixed by clearing placeholder first.
+- Development APK showed "Unable to load script" (no Metro) — resolved by switching device verification to the standalone preview build.
+- Preview build canceled mid-wait on first attempt — resolved with `--no-wait`.
+- iOS build blocked on Apple Developer Program — deferred.
 
-**expo-doctor findings:** None. 21/21 checks pass. iOS 16.4 deploymentTarget does not trigger any warning (correct value per Plan 01-01a fix).
+## On-Device Verification (user-run, async)
 
-## User Setup Required
+Standalone APK: https://expo.dev/accounts/kralgor/projects/cocuyo/builds/5684241e-9b5b-4ae6-b81c-89a94164f68f
 
-See checkpoint below — user must complete EAS auth and trigger builds manually.
+8-step checklist (to confirm whenever the APK is installed):
+1. App launches → splash → onboarding trust screen
+2. "Comenzar" → zone picker
+3. Zone search filters regions
+4. Select zone → home tab
+5. Home shows status hero for selected zone
+6. Airplane mode → amber stale banner appears, cached status persists
+7. Wi-Fi back → banner clears, status refreshes
+8. Settings modal → theme toggle (Claro/Oscuro/Sistema) + "Cambiar zona"
 
 ## Next Phase Readiness
 
-Blocked pending:
-1. User runs `eas login` (expo.dev credentials)
-2. User runs `cd mobile && npx eas-cli init` (sets real project ID in app.json — replaces `[EAS_PROJECT_ID]`)
-3. User triggers `npx eas-cli build --profile development --platform android --non-interactive`
-4. User triggers `npx eas-cli build --profile development --platform ios --non-interactive`
-5. User installs artifacts on device/emulator and completes 8-step verification checklist
-
-Once builds are triggered and user completes on-device verification, PLAT-01/02/03, TRST-01/02, STAT-01/02/03 requirements are confirmed closed and Phase 1 is complete.
+EAS build pipeline proven (Android APK built successfully). PLAT-01/02/03 satisfied. iOS store path deferred to a future phase pending Apple Developer Program purchase. Phase 1 application layer + offline core complete; ready for phase verification gate.
 
 ---
 *Phase: 01-foundation-offline-core*
