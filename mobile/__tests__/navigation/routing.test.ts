@@ -62,3 +62,25 @@ describe('resolveInitialRoute', () => {
     expect(route).toBe('tabs');
   });
 });
+
+// ── route tree invariant (regression for the "/" collision) ────────────────────
+// A bare app/index.tsx and app/(tabs)/index.tsx BOTH resolve to "/" (route groups
+// are transparent to the URL). When both existed, expo-router served the static
+// app/index.tsx ("Cocuyo — cargando…") and the Stack.Protected flow never rendered
+// — the app hung on a white screen. (tabs)/index.tsx must be the sole owner of "/".
+describe('route tree', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const appDir = path.resolve(__dirname, '../../app');
+
+  it('has no bare app/index.tsx colliding with (tabs)/index.tsx at "/"', () => {
+    expect(fs.existsSync(path.join(appDir, 'index.tsx'))).toBe(false);
+    expect(fs.existsSync(path.join(appDir, '(tabs)', 'index.tsx'))).toBe(true);
+  });
+
+  it('keeps the three guarded entry screens', () => {
+    expect(fs.existsSync(path.join(appDir, 'onboarding.tsx'))).toBe(true);
+    expect(fs.existsSync(path.join(appDir, 'zone-picker.tsx'))).toBe(true);
+    expect(fs.existsSync(path.join(appDir, '(tabs)', '_layout.tsx'))).toBe(true);
+  });
+});
