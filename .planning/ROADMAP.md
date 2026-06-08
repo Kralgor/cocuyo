@@ -12,7 +12,7 @@ Five phases from Expo scaffold to published stores. Phase 1 builds the offline-f
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation + Offline Core** - Expo scaffold, MMKV status cache, trust onboarding, privacy strings
+- [x] **Phase 1: Foundation + Offline Core** - Expo scaffold, MMKV status cache, trust onboarding, privacy strings
 - [ ] **Phase 2: Reporting + Sharing + Quick Wins** - GPS report flow, offline queue, WhatsApp sharing, emergency contacts, AMOLED, low-battery mode
 - [ ] **Phase 3: Push Notifications** - Expo push infrastructure, push_tokens table, notify.py pipeline module, NotificationHandler
 - [ ] **Phase 4: Food Spoilage Timers** - Pre-built Venezuelan food list, custom items, local notifications, outage auto-start
@@ -32,11 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. User can access privacy and open-source section in settings with a working GitHub link
 **Plans**: 5 plans
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold Expo SDK 56 + config + core lib (api/storage/regions/i18n/theme/query) + test harness
+- [x] 01-01-PLAN.md — Scaffold Expo SDK 56 + config + core lib (api/storage/regions/i18n/theme/query) + test harness [split into 01-01a + 01-01b]
 - [x] 01-02-PLAN.md — Theme context, hooks (useStatus/useOffline/useTheme), root layout (Stack.Protected), 5-tab bar + placeholders
 - [x] 01-03-PLAN.md — Trust onboarding screen + zone picker (state-grouped, searchable, status dots)
 - [x] 01-04-PLAN.md — Zone detail (hero/duration/staleness/signal cards) + settings modal (privacy/GitHub)
-- [ ] 01-05-PLAN.md — EAS dev builds (Android/iOS) + OTA + on-device verification gate
+- [x] 01-05-PLAN.md — EAS dev builds (Android/iOS) + OTA + on-device verification gate [Android built; iOS deferred — Apple Developer Program]
 **UI hint**: yes
 
 ### Phase 2: Reporting + Sharing + Quick Wins
