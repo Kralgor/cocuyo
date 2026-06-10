@@ -66,11 +66,11 @@ export interface StatusJson {
 
 // ── constants ──────────────────────────────────────────────────────────────────
 // CDN URL read from app.json extra — set by EAS at build time.
-// Falls back to the production CDN URL.
+// Falls back to the live production CDN URL (cocuyo.kralgor.com).
 // Source: RESEARCH.md Open Question 3 (RESOLVED) — use Constants.expoConfig?.extra?.statusCdnUrl
 const STATUS_CDN_URL: string =
   (Constants.expoConfig?.extra?.statusCdnUrl as string | undefined) ??
-  'https://cdn.cocuyo.app/status.json';
+  'https://cocuyo.kralgor.com/status.json';
 
 // ── fetchStatus ────────────────────────────────────────────────────────────────
 // Returns { data: StatusJson, offline: false } on success.

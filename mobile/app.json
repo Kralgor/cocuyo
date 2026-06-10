@@ -68,7 +68,7 @@
       ]
     ],
     "extra": {
-      "statusCdnUrl": "https://cdn.cocuyo.app/status.json",
+      "statusCdnUrl": "https://cocuyo.kralgor.com/status.json",
       "router": {},
       "eas": {
         "projectId": "53f480cb-b4e4-420e-8be7-c36e78bc914c"
