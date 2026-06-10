@@ -109,24 +109,6 @@ export default function MobileShell({
       {!noTabBar && (
         <TabBar theme={t} lang={lang} activeTab={activeTab} onTabChange={onTabChange} />
       )}
-
-      {/* iOS home indicator */}
-      <div style={{
-        height: 30,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-        paddingBottom: 8,
-        background: t.bg,
-        flexShrink: 0,
-      }}>
-        <div style={{
-          width: 134, height: 5,
-          borderRadius: 99,
-          background: t.ink,
-          opacity: 0.4,
-        }} />
-      </div>
     </div>
   );
 }

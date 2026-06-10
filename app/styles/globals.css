@@ -94,12 +94,19 @@ html, body {
 }
 
 /* ── Responsive shell ── */
+/* Definite height chain: MobileShell's height:100% needs a sized ancestor.
+   min-height alone leaves percentage heights unresolved — tab bar unpins,
+   page scrolls instead of the inner content area. dvh tracks the mobile
+   browser address bar; vh is the fallback for older browsers. */
 .app-outer {
   justify-content: center;
+  height: 100vh;
+  height: 100dvh;
 }
 
 .app-shell {
   max-width: 430px;
+  height: 100%;
 }
 
 @media (min-width: 768px) {

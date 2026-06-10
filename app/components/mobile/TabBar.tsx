@@ -33,7 +33,8 @@ export default function TabBar({ theme: t, lang, activeTab, onTabChange }: Props
       gridTemplateColumns: `repeat(${TABS.length}, 1fr)`,
       borderTop: `0.5px solid ${t.line}`,
       background: t.panel,
-      padding: '8px 4px 4px',
+      // safe-area inset replaces the removed decorative home-indicator strip
+      padding: '8px 4px max(4px, env(safe-area-inset-bottom))',
     }}>
       {TABS.map(tab => {
         const isActive = tab.id === activeTab;
