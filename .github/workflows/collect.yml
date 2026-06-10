@@ -66,6 +66,7 @@ jobs:
       R2_ENDPOINT_URL:           ${{ secrets.R2_ENDPOINT_URL }}
       R2_ACCESS_KEY_ID:          ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY:      ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      CF_API_TOKEN:              ${{ secrets.CF_API_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -98,4 +99,24 @@ jobs:
                   print(f"uploaded {path}")
               else:
                   print(f"skipped {path} (not found — sparse data?)")
+          EOF
+
+      - name: Backfill history JSON
+        run: python pipeline/backfill_history.py --days 365
+
+      - name: Upload history JSON to R2
+        run: |
+          python - <<'EOF'
+          import boto3, glob, os
+
+          s3 = boto3.client(
+              "s3",
+              endpoint_url=os.environ["R2_ENDPOINT_URL"],
+              aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+              aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+          )
+          for path in glob.glob("app/public/history/*.json"):
+              fname = os.path.basename(path)
+              s3.upload_file(path, "cocuyo", f"history/{fname}", ExtraArgs={"ContentType": "application/json"})
+              print(f"uploaded history/{fname}")
           EOF

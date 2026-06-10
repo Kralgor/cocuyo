@@ -60,10 +60,23 @@ export interface RegionHistory {
 
 const cache: Record<string, RegionHistory> = {};
 
+// Base URL for history JSON files.
+// When NEXT_PUBLIC_HISTORY_BASE is set (e.g. https://cocuyo.kralgor.com/history),
+// fetches from that CDN prefix. Falls back to the relative /history/ path so the
+// existing static deploy keeps working unchanged without any env var.
+function _historyUrl(regionKey: string): string {
+  const base = process.env.NEXT_PUBLIC_HISTORY_BASE;
+  if (base) {
+    const trimmed = base.replace(/\/$/, '');
+    return `${trimmed}/${regionKey}.json`;
+  }
+  return `/history/${regionKey}.json`;
+}
+
 export async function fetchRegionHistory(regionKey: string): Promise<RegionHistory | null> {
   if (cache[regionKey]) return cache[regionKey];
   try {
-    const res = await fetch(`/history/${regionKey}.json`);
+    const res = await fetch(_historyUrl(regionKey));
     if (!res.ok) return null;
     const data = await res.json() as RegionHistory;
     cache[regionKey] = data;
