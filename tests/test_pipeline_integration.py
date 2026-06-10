@@ -202,3 +202,25 @@ class TestAboveQuorum:
         # Phase 1: current_score stays null even with quorum met — no passive cross-validation
         doc = run_pipeline({REGION: self._quorum_reports()})
         assert doc["regions"][REGION]["current_score"] is None
+
+
+# ── next_update_approx cadence bound ─────────────────────────────────────────
+
+class TestCadenceBound:
+    def test_next_update_approx_conservative_bound(self):
+        """next_update_approx must be 110–130 min after updated_at.
+
+        GitHub throttles */10 cron to ~2h observed; the constant must advertise
+        a conservative bound (120 min) so the field never over-promises freshness.
+        """
+        from datetime import datetime, timezone
+        doc = run_pipeline({})
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        updated_at     = datetime.strptime(doc["updated_at"],         fmt).replace(tzinfo=timezone.utc)
+        next_update    = datetime.strptime(doc["next_update_approx"], fmt).replace(tzinfo=timezone.utc)
+        delta_min = (next_update - updated_at).total_seconds() / 60
+        assert 110 <= delta_min <= 130, (
+            f"next_update_approx delta is {delta_min:.1f} min; expected 110–130 min "
+            f"(conservative 2h bound). Got updated_at={doc['updated_at']} "
+            f"next_update_approx={doc['next_update_approx']}"
+        )
