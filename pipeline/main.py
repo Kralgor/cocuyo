@@ -43,7 +43,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 _REPORT_WINDOW_MIN = 30
-_UPDATE_INTERVAL_MIN = 10  # Phase 1 cadence
+_UPDATE_INTERVAL_MIN = 120  # GitHub throttles */10 cron to ~2h; advertise a conservative bound so next_update_approx never over-promises
 
 # Static rationing patterns — seed data, manually updated.
 # Source: CONTEXT.md "Known Rationing Patterns" section.
