@@ -149,6 +149,8 @@ const STRINGS: StringMap = {
   no_data:          { es: 'Sin datos',                                      en: 'No data' },
   unverified:       { es: 'Reportes sin verificar',                         en: 'Unverified reports' },
   coming_soon:      { es: 'Próximamente',                                   en: 'Coming soon' },
+  bajones_pending_title: { es: 'Detección de bajones en camino',            en: 'Voltage-dip detection coming' },
+  bajones_pending_body:  { es: 'Esta función necesita reportes de la comunidad para activarse. Aún no hay suficientes usuarios reportando inestabilidad en tu zona.', en: "This feature needs community reports to go live. There aren't enough users reporting instability in your area yet." },
 };
 
 export function tt(key: string, lang: Lang = 'es'): string {
