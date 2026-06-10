@@ -85,6 +85,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260610-r9k | Fix dead CDN URL in mobile app and data honesty pass (history backfill CI, Bajones demo label, next_update_approx) | 2026-06-10 | df79233 | [260610-r9k-fix-dead-cdn-url-in-mobile-app-and-data-](./quick/260610-r9k-fix-dead-cdn-url-in-mobile-app-and-data-/) |
+| fast | Web shell height chain fix + remove fake iOS home indicator (tab bar pinning, dvh) | 2026-06-10 | d1288fb | — |
 
 ## Deferred Items
 
