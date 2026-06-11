@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 01 (foundation-offline-core) — COMPLETE
 Plan: 6 of 6
 Status: Phase 01 complete — verifier PASS (code-level), code review blockers resolved
-Last activity: 2026-06-10 - Completed quick task 260610-srt: responsive desktop UI
+Last activity: 2026-06-11 - Completed quick task 260610-sts: VIIRS + RIPE/M-Lab signals
 
 Progress: [██░░░░░░░░] 20%
 
@@ -87,6 +87,7 @@ None yet.
 | 260610-r9k | Fix dead CDN URL in mobile app and data honesty pass (history backfill CI, Bajones demo label, next_update_approx) | 2026-06-10 | df79233 | [260610-r9k-fix-dead-cdn-url-in-mobile-app-and-data-](./quick/260610-r9k-fix-dead-cdn-url-in-mobile-app-and-data-/) |
 | fast | Web shell height chain fix + remove fake iOS home indicator (tab bar pinning, dvh) | 2026-06-10 | d1288fb | — |
 | 260610-srt | Responsive UI: two-pane desktop layout (430px column + persistent map >=1024px) | 2026-06-10 | 7bf08f8 | [260610-srt-responsive-ui-pass-desktop-layout-for-we](./quick/260610-srt-responsive-ui-pass-desktop-layout-for-we/) |
+| 260610-sts | New outage signals: VIIRS HDF5 extraction (h5py), RIPE Atlas collector, M-Lab stub, internet_score corroboration | 2026-06-11 | 0afc1f1 | [260610-sts-new-outage-signals-viirs-hdf5-radiance-e](./quick/260610-sts-new-outage-signals-viirs-hdf5-radiance-e/) |
 
 ## Deferred Items
 
