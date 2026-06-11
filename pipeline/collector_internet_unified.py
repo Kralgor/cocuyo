@@ -1,14 +1,19 @@
 """
 Unified internet signal collector — Phase 2.
 
-Combines IODA (BGP) + Cloudflare Radar (HTTP traffic).
-OONI (censorship detection) deferred to Phase 3.
+Combines IODA (BGP) + Cloudflare Radar (HTTP traffic) as primary signals,
+with RIPE Atlas + M-Lab as weak corroborating sources. OONI deferred to Phase 3.
 
 classify_internet_situation() produces one of 4 situation types:
   power_outage       — multi-ISP BGP + traffic collapse
   isp_failure        — single ISP drop, others stable
   confirmed_disruption — Cloudflare-flagged outage event
   normal             — all sources clear
+
+apply_corroboration() blends RIPE/M-Lab into the internet_score with a capped
+delta. This keeps ADR-009 scorer.py weights (internet 0.35, crowd 0.30,
+satellite 0.20, weather 0.15) untouched — corroboration only refines the
+internet_score INPUT, not the blend weights.
 
 Also returns internet_score (0-1) for scorer.py weight blend.
 """
@@ -128,15 +133,54 @@ def classify_internet_situation(
     }
 
 
+def apply_corroboration(
+    base_score: float,
+    ripe: dict,
+    mlab: dict,
+    cap: float = 0.15,
+) -> float:
+    """
+    Refine internet_score using RIPE Atlas + M-Lab corroboration.
+
+    Computes a delta from RIPE per-region probe scores (max across all
+    regions, to capture the worst-affected area) scaled into [0, cap].
+    M-Lab contributes 0 while stubbed. Delta is added to base_score and
+    result is clamped to [0.0, 1.0].
+
+    This keeps ADR-009 scorer.py blend weights untouched — we are only
+    refining the internet_score before it enters the scorer, not changing
+    the IODA/Cloudflare/satellite/crowd mix.
+    """
+    # Compute RIPE delta: take the maximum per-region score across VE
+    ripe_max: float = 0.0
+    for region_data in ripe.values():
+        region_score = region_data.get("score", 0.0)
+        if isinstance(region_score, (int, float)) and region_score > ripe_max:
+            ripe_max = float(region_score)
+
+    # Scale RIPE contribution into [0, cap]: ripe_max is already in [0, 0.6],
+    # so we proportionally scale it to the cap.
+    ripe_delta = ripe_max * (cap / 0.6) if ripe_max > 0 else 0.0
+    ripe_delta = min(ripe_delta, cap)
+
+    # M-Lab contributes 0 while stubbed (returns {})
+    mlab_delta: float = 0.0
+
+    total_delta = ripe_delta + mlab_delta
+    result = base_score + total_delta
+    return max(0.0, min(1.0, result))
+
+
 def collect_all_internet_signals(
     now: datetime | None = None,
     _ioda_session: requests.Session | None = None,
     _cf_session: requests.Session | None = None,
 ) -> dict:
     """
-    Pull IODA + Cloudflare, classify, return unified result.
+    Pull IODA + Cloudflare, classify, apply RIPE/M-Lab corroboration, return unified result.
 
     internet_score (0-1) ready for scorer.py. OONI skipped (Phase 3).
+    Adds "ripe" and "mlab" transparency keys to the returned dict.
     """
     if now is None:
         now = datetime.now(timezone.utc)
@@ -155,10 +199,33 @@ def collect_all_internet_signals(
 
     classification = classify_internet_situation(ioda, cloudflare, ooni)
 
+    # RIPE Atlas corroboration — lazy import; failure -> empty dict (never aborts)
+    try:
+        from pipeline.collector_ripe import fetch_ripe_connectivity  # noqa: PLC0415
+        ripe = fetch_ripe_connectivity()
+    except Exception as exc:
+        logger.warning("RIPE corroboration failed: %s", exc)
+        ripe = {}
+
+    # M-Lab corroboration — lazy import; documented stub returns {}
+    try:
+        from pipeline.collector_mlab import fetch_mlab_signals  # noqa: PLC0415
+        mlab = fetch_mlab_signals()
+    except Exception as exc:
+        logger.warning("M-Lab corroboration failed: %s", exc)
+        mlab = {}
+
+    # Blend corroboration into internet_score (ADR-009 weights untouched)
+    classification["internet_score"] = apply_corroboration(
+        classification["internet_score"], ripe, mlab
+    )
+
     return {
         "timestamp":      now.isoformat(),
         "ioda":           ioda,
         "cloudflare":     cloudflare,
         "ooni":           ooni,
         "classification": classification,
+        "ripe":           ripe,
+        "mlab":           mlab,
     }

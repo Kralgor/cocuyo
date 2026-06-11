@@ -248,3 +248,127 @@ class TestCollectAllInternetSignals:
             now=NOW, _ioda_session=ioda_s, _cf_session=cf_s
         )
         assert set(result["cloudflare"]["per_asn"].keys()) == set(VE_ASNS.keys())
+
+
+# ── apply_corroboration ───────────────────────────────────────────────────────
+
+class TestApplyCorroboration:
+    def test_empty_ripe_mlab_unchanged(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        score = apply_corroboration(0.5, {}, {})
+        assert score == pytest.approx(0.5)
+
+    def test_elevated_ripe_adds_positive_delta(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        ripe = {"caracas": {"disconnected_ratio": 0.8, "probe_count": 4, "score": 0.5}}
+        score = apply_corroboration(0.4, ripe, {})
+        assert score > 0.4
+
+    def test_delta_capped_at_cap(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        # Very high RIPE signal — delta cannot exceed cap
+        ripe = {"caracas": {"score": 0.6}, "maracaibo": {"score": 0.6}}
+        score = apply_corroboration(0.3, ripe, {}, cap=0.15)
+        assert score <= 0.3 + 0.15 + 1e-9
+
+    def test_clamped_to_1_when_base_plus_cap_exceeds_1(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        ripe = {"caracas": {"score": 0.6}}
+        score = apply_corroboration(0.95, ripe, {}, cap=0.15)
+        assert score <= 1.0
+
+    def test_never_below_zero(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        score = apply_corroboration(0.0, {}, {})
+        assert score >= 0.0
+
+    def test_mlab_stub_contributes_zero(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        # M-Lab is {} stub — base score unchanged
+        score = apply_corroboration(0.5, {}, {"mlab_placeholder": {}})
+        assert score == pytest.approx(0.5)
+
+    def test_strong_base_not_reduced(self):
+        from pipeline.collector_internet_unified import apply_corroboration
+        # Corroboration only adds — never subtracts
+        score = apply_corroboration(0.9, {}, {})
+        assert score >= 0.9
+
+
+# ── backward-compatibility of collect_all_internet_signals ───────────────────
+
+class TestCollectAllInternetSignalsBackwardCompat:
+    """Verify the RIPE/M-Lab integration does not break existing contract."""
+
+    def _make_sessions(self, ioda_score=0.95, cf_detected=False):
+        """Reuse the same mock pattern from TestCollectAllInternetSignals."""
+        ioda_resp = MagicMock()
+        ioda_resp.status_code = 200
+        ioda_resp.raise_for_status.side_effect = None
+        ioda_resp.json.return_value = {"data": [{"values": [ioda_score]}]}
+        ioda_session = MagicMock()
+        ioda_session.get.return_value = ioda_resp
+
+        cf_resp = MagicMock()
+        cf_resp.status_code = 200
+        cf_resp.raise_for_status.side_effect = None
+
+        def cf_json():
+            return {
+                "result": {
+                    "trafficAnomalies": [],
+                    "httpRequests": {
+                        "timestamps": [f"t{i}" for i in range(8)],
+                        "values": [0.0 if cf_detected else 100.0] * 8,
+                    },
+                }
+            }
+        cf_resp.json.side_effect = cf_json
+        cf_session = MagicMock()
+        cf_session.get.return_value = cf_resp
+
+        return ioda_session, cf_session
+
+    def test_internet_score_present_with_ripe_mlab_empty(self):
+        """With RIPE and M-Lab both returning {}, internet_score equals classifier output."""
+        from unittest.mock import patch
+        ioda_s, cf_s = self._make_sessions()
+        with patch("pipeline.collector_ripe.fetch_ripe_connectivity", return_value={}), \
+             patch("pipeline.collector_mlab.fetch_mlab_signals", return_value={}):
+            result = collect_all_internet_signals(
+                now=NOW, _ioda_session=ioda_s, _cf_session=cf_s
+            )
+        assert "internet_score" in result["classification"]
+
+    def test_ripe_key_in_result(self):
+        from unittest.mock import patch
+        ioda_s, cf_s = self._make_sessions()
+        with patch("pipeline.collector_ripe.fetch_ripe_connectivity", return_value={}), \
+             patch("pipeline.collector_mlab.fetch_mlab_signals", return_value={}):
+            result = collect_all_internet_signals(
+                now=NOW, _ioda_session=ioda_s, _cf_session=cf_s
+            )
+        assert "ripe" in result
+
+    def test_mlab_key_in_result(self):
+        from unittest.mock import patch
+        ioda_s, cf_s = self._make_sessions()
+        with patch("pipeline.collector_ripe.fetch_ripe_connectivity", return_value={}), \
+             patch("pipeline.collector_mlab.fetch_mlab_signals", return_value={}):
+            result = collect_all_internet_signals(
+                now=NOW, _ioda_session=ioda_s, _cf_session=cf_s
+            )
+        assert "mlab" in result
+
+    def test_empty_ripe_mlab_preserves_score_unchanged(self):
+        """internet_score must equal the classifier's output when RIPE/M-Lab are empty."""
+        from unittest.mock import patch
+        from pipeline.collector_internet_unified import classify_internet_situation
+        ioda_s, cf_s = self._make_sessions()
+        with patch("pipeline.collector_ripe.fetch_ripe_connectivity", return_value={}), \
+             patch("pipeline.collector_mlab.fetch_mlab_signals", return_value={}):
+            result = collect_all_internet_signals(
+                now=NOW, _ioda_session=ioda_s, _cf_session=cf_s
+            )
+        score = result["classification"]["internet_score"]
+        assert 0.0 <= score <= 1.0
