@@ -24,19 +24,21 @@ interface Props {
   lang: Lang;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  hideTabs?: TabId[];
 }
 
-export default function TabBar({ theme: t, lang, activeTab, onTabChange }: Props) {
+export default function TabBar({ theme: t, lang, activeTab, onTabChange, hideTabs = [] }: Props) {
+  const visibleTabs = TABS.filter(tab => !hideTabs.includes(tab.id));
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: `repeat(${TABS.length}, 1fr)`,
+      gridTemplateColumns: `repeat(${visibleTabs.length}, 1fr)`,
       borderTop: `0.5px solid ${t.line}`,
       background: t.panel,
       // safe-area inset replaces the removed decorative home-indicator strip
       padding: '8px 4px max(4px, env(safe-area-inset-bottom))',
     }}>
-      {TABS.map(tab => {
+      {visibleTabs.map(tab => {
         const isActive = tab.id === activeTab;
         return (
           <button

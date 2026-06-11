@@ -104,19 +104,28 @@ html, body {
   height: 100dvh;
 }
 
+/* Below 1024px: centered 430px phone column, unchanged from original. */
 .app-shell {
   max-width: 430px;
   height: 100%;
 }
 
-@media (min-width: 768px) {
-  .app-shell {
-    max-width: 720px;
+/* >=1024px: two-pane grid — 430px left column + map fills remaining width. */
+@media (min-width: 1024px) {
+  .app-outer {
+    display: grid;
+    grid-template-columns: 430px 1fr;
   }
-}
 
-@media (min-width: 1200px) {
   .app-shell {
-    max-width: 900px;
+    max-width: none;
+    width: 430px;
+    height: 100%;
+  }
+
+  /* Right pane: full-height Leaflet map. */
+  .desktop-map-pane {
+    height: 100%;
+    border-left: 1px solid var(--line);
   }
 }
