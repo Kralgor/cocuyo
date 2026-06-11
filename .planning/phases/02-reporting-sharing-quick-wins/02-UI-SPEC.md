@@ -1,7 +1,8 @@
 ---
 phase: 2
 slug: reporting-sharing-quick-wins
-status: draft
+status: approved
+reviewed_at: 2026-06-11T18:45:00Z
 shadcn_initialized: false
 preset: none
 created: 2026-06-11
