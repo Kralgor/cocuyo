@@ -83,9 +83,10 @@ interface MapProps {
   regions?:      Record<string, RegionEntry>;
   theme:         Theme;
   onMarkerTap?:  (regionKey: string) => void;
+  fillHeight?:   boolean;
 }
 
-export default function Map({ regions = MOCK_REGIONS, theme: t, onMarkerTap }: MapProps) {
+export default function Map({ regions = MOCK_REGIONS, theme: t, onMarkerTap, fillHeight = false }: MapProps) {
   const hasOutage = (status: string) =>
     status === 'unverified_reports' ||
     status === 'likely_outage'      ||
@@ -95,7 +96,7 @@ export default function Map({ regions = MOCK_REGIONS, theme: t, onMarkerTap }: M
     <MapContainer
       center={[8.5, -66.0]}
       zoom={6}
-      style={{ height: '440px', width: '100%', background: t.bg }}
+      style={{ height: fillHeight ? '100%' : '440px', width: '100%', background: t.bg }}
       scrollWheelZoom={false}
       zoomControl={true}
     >
