@@ -70,7 +70,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- [2026-06-11] Parroquia-level reporting (hyperlocal) — report-side Phase 2 candidate, scoring deferred until user density (`.planning/todos/pending/2026-06-11-parroquia-level-reporting-hyperlocal.md`)
 
 ### Blockers/Concerns
 
