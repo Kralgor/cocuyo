@@ -15,12 +15,13 @@ interface Props {
   onTabChange: (tab: TabId) => void;
   onSettingsOpen?: () => void;
   noTabBar?: boolean;
+  hideTabs?: TabId[];
   children: ReactNode;
 }
 
 export default function MobileShell({
   theme: t, lang, title, subtitle, titleAction, accentColor,
-  activeTab, onTabChange, onSettingsOpen, noTabBar = false, children,
+  activeTab, onTabChange, onSettingsOpen, noTabBar = false, hideTabs = [], children,
 }: Props) {
   const ac = accentColor ?? t.accent;
 
@@ -107,7 +108,7 @@ export default function MobileShell({
 
       {/* Tab bar */}
       {!noTabBar && (
-        <TabBar theme={t} lang={lang} activeTab={activeTab} onTabChange={onTabChange} />
+        <TabBar theme={t} lang={lang} activeTab={activeTab} onTabChange={onTabChange} hideTabs={hideTabs} />
       )}
     </div>
   );

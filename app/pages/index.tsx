@@ -6,6 +6,7 @@ import { useApp } from '../contexts/AppContext';
 import { useAutoRefresh } from '../lib/api';
 import { useRegionHistory } from '../lib/history';
 import { tt } from '../lib/i18n';
+import { useMediaQuery } from '../lib/useMediaQuery';
 import MobileShell from '../components/mobile/MobileShell';
 import { TabId } from '../components/mobile/TabBar';
 import RegionPicker, { getRegion } from '../components/mobile/RegionPicker';
@@ -31,7 +32,17 @@ const Home: NextPage = () => {
   const [tempRegionKey, setTempRegionKey] = useState<string | null>(null);
   const [mounted,      setMounted]      = useState(false);
 
+  // Returns false on first render (SSR/hydration safe), true after mount at >=1024px.
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
   useEffect(() => { setMounted(true); }, []);
+
+  // Guard: if desktop becomes true while user is on the now-hidden map tab, switch to zone.
+  useEffect(() => {
+    if (isDesktop && activeTab === 'map') {
+      setActiveTab('zone');
+    }
+  }, [isDesktop, activeTab]);
 
   const effectiveRegionKey = tempRegionKey ?? selectedRegion;
   const { history, loading: historyLoading } = useRegionHistory(effectiveRegionKey);
@@ -199,7 +210,6 @@ const Home: NextPage = () => {
 
       <div className="app-outer" style={{
         background: t.panel2,
-        display: 'flex',
       }}>
         <div className="app-shell" style={{
           width: '100%',
@@ -217,6 +227,7 @@ const Home: NextPage = () => {
             activeTab={activeTab}
             onTabChange={handleTabChange}
             onSettingsOpen={() => setShowSettings(true)}
+            hideTabs={isDesktop ? ['map'] : []}
           >
             {renderContent()}
           </MobileShell>
@@ -237,6 +248,18 @@ const Home: NextPage = () => {
             />
           )}
         </div>
+
+        {/* Desktop right pane: persistent Leaflet map (hidden below 1024px via CSS + conditional render) */}
+        {isDesktop && (
+          <div className="desktop-map-pane">
+            <Map
+              regions={status?.regions}
+              theme={t}
+              onMarkerTap={handleMarkerTap}
+              fillHeight
+            />
+          </div>
+        )}
       </div>
     </>
   );
