@@ -49,7 +49,15 @@ Plans:
   3. User can share outage status to WhatsApp with one tap, producing pre-formatted Spanish text
   4. User can view emergency contacts (utility company, emergency services) for their selected zone
   5. User can enable AMOLED true-black dark mode, and the app automatically reduces refresh frequency when battery drops below 20%
-**Plans**: TBD
+**Plans**: 7 plans
+Plans:
+- [ ] 02-01-PLAN.md — Foundation: install deps, app.json (anon Supabase + expo-location), storage/i18n/jest mocks, parroquia schema doc + migration checkpoint
+- [ ] 02-02-PLAN.md — Wave 0: curate parroquias.json (incl. Zulia + DC) + contacts.json; 5 failing unit-test files
+- [ ] 02-03-PLAN.md — Reporting core: submitReport (anon POST), MMKV offline queue (idempotent + cooldown), GPS nearest-zone detection
+- [ ] 02-04-PLAN.md — Share lib (composeShareText honesty + WhatsApp/system fallback) + parroquias lookup
+- [ ] 02-05-PLAN.md — AMOLED theme/context + useBattery + battery-adaptive useStatus + useReportQueue auto-sync
+- [ ] 02-06-PLAN.md — Report flow UI: Toast + ReportConfirmSheet + full Report tab (GPS/manual, online/offline, cooldown)
+- [ ] 02-07-PLAN.md — Zone tab: WhatsApp share button, Números útiles contacts card, share prompt, battery banner + Settings AMOLED option
 **UI hint**: yes
 
 ### Phase 3: Push Notifications
@@ -95,11 +103,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Offline Core | 5/6 | In Progress|  |
-| 2. Reporting + Sharing + Quick Wins | 0/TBD | Not started | - |
+| 2. Reporting + Sharing + Quick Wins | 0/7 | Planned | - |
 | 3. Push Notifications | 0/TBD | Not started | - |
 | 4. Food Spoilage Timers | 0/TBD | Not started | - |
 | 5. Polish + Store Submission | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-05-25*
-*Last updated: 2026-05-25 after Phase 1 planning — 5 plans created*
+*Last updated: 2026-06-11 after Phase 2 planning — 7 plans created*
