@@ -16,9 +16,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Reporting
 
-- [ ] **REPT-01**: User can submit an outage report with their zone auto-detected via GPS
-- [ ] **REPT-02**: User can manually select their zone if GPS is denied or unavailable
-- [ ] **REPT-03**: User can submit reports while offline, queued and synced when connectivity returns
+- [x] **REPT-01**: User can submit an outage report with their zone auto-detected via GPS
+- [x] **REPT-02**: User can manually select their zone if GPS is denied or unavailable
+- [x] **REPT-03**: User can submit reports while offline, queued and synced when connectivity returns
 
 ### Notifications
 
@@ -41,13 +41,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Sharing
 
-- [ ] **SHAR-01**: User can share outage status to WhatsApp with one tap (pre-formatted Spanish text)
+- [x] **SHAR-01**: User can share outage status to WhatsApp with one tap (pre-formatted Spanish text)
 
 ### Battery & Accessibility
 
-- [ ] **BATT-01**: User can enable AMOLED true-black dark mode for battery conservation
-- [ ] **BATT-02**: App automatically reduces refresh frequency when device battery drops below 20%
-- [ ] **BATT-03**: User can view emergency contacts (utility company, emergency services) for their zone
+- [x] **BATT-01**: User can enable AMOLED true-black dark mode for battery conservation
+- [x] **BATT-02**: App automatically reduces refresh frequency when device battery drops below 20%
+- [x] **BATT-03**: User can view emergency contacts (utility company, emergency services) for their zone
 
 ### Platform
 
@@ -104,9 +104,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STAT-02 | Phase 1 | Pending |
 | STAT-03 | Phase 1 | Pending |
 | STAT-04 | Phase 5 | Pending |
-| REPT-01 | Phase 2 | Pending |
-| REPT-02 | Phase 2 | Pending |
-| REPT-03 | Phase 2 | Pending |
+| REPT-01 | Phase 2 | Complete |
+| REPT-02 | Phase 2 | Complete |
+| REPT-03 | Phase 2 | Complete |
 | NOTF-01 | Phase 3 | Pending |
 | NOTF-02 | Phase 3 | Pending |
 | NOTF-03 | Phase 4 | Pending |
@@ -117,10 +117,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FOOD-04 | Phase 4 | Pending |
 | TRST-01 | Phase 1 | Pending |
 | TRST-02 | Phase 1 | Pending |
-| SHAR-01 | Phase 2 | Pending |
-| BATT-01 | Phase 2 | Pending |
-| BATT-02 | Phase 2 | Pending |
-| BATT-03 | Phase 2 | Pending |
+| SHAR-01 | Phase 2 | Complete |
+| BATT-01 | Phase 2 | Complete |
+| BATT-02 | Phase 2 | Complete |
+| BATT-03 | Phase 2 | Complete |
 | PLAT-01 | Phase 1 | Pending |
 | PLAT-02 | Phase 1 | Pending |
 | PLAT-03 | Phase 1 | Pending |
