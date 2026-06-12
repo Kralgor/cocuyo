@@ -2,14 +2,14 @@ import React, { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
-import { LIGHT_THEME, DARK_THEME } from '@/constants/colors';
+import { LIGHT_THEME, DARK_THEME, AMOLED_THEME } from '@/constants/colors';
 import type { MobileTheme } from '@/constants/colors';
 
 // ── types ──────────────────────────────────────────────────────────────────────
 interface ThemeContextValue {
   theme: MobileTheme;
-  override: 'light' | 'dark' | null;
-  setOverride: (v: 'light' | 'dark' | null) => void;
+  override: 'light' | 'dark' | 'amoled' | null;
+  setOverride: (v: 'light' | 'dark' | 'amoled' | null) => void;
 }
 
 // ── context ────────────────────────────────────────────────────────────────────
@@ -20,20 +20,20 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 // MMKV reads are in the render body (not module level) per RESEARCH.md Pitfall 1.
 // Default when no preference: 'dark' (OLED screens, power outage context — D-06).
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const systemScheme = useColorScheme(); // 'light' | 'dark' | null
+  const systemScheme = useColorScheme(); // 'light' | 'dark' | 'amoled' | null
 
   // Read MMKV synchronously in the render body — safe per RESEARCH.md Pitfall 1.
   // Stored value is 'light' | 'dark'; absence means system preference.
-  const storedOverride = storage.getString(STORAGE_KEYS.themeOverride) as 'light' | 'dark' | null ?? null;
-  const [overrideState, setOverrideState] = useState<'light' | 'dark' | null>(storedOverride);
+  const storedOverride = storage.getString(STORAGE_KEYS.themeOverride) as 'light' | 'dark' | 'amoled' | null ?? null;
+  const [overrideState, setOverrideState] = useState<'light' | 'dark' | 'amoled' | null>(storedOverride);
 
   const effective = overrideState ?? systemScheme ?? 'dark';
-  const theme = effective === 'light' ? LIGHT_THEME : DARK_THEME;
+  const theme = effective === 'light' ? LIGHT_THEME : effective === 'amoled' ? AMOLED_THEME : DARK_THEME;
 
   // ── setOverride ────────────────────────────────────────────────────────────
   // Writes to MMKV and updates local state in one call.
   // Passing null removes the key (revert to system preference).
-  function setOverride(v: 'light' | 'dark' | null): void {
+  function setOverride(v: 'light' | 'dark' | 'amoled' | null): void {
     setOverrideState(v);
     if (v !== null) {
       storage.set(STORAGE_KEYS.themeOverride, v);

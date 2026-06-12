@@ -11,7 +11,7 @@ import type { StatusJson } from '@/lib/api';
 //
 // Throws in queryFn when data is null — React Query treats this as an error state,
 // which triggers retry logic (3 retries per query.ts defaults).
-export function useStatus(): {
+export function useStatus(refreshInterval?: number): {
   data: StatusJson | null;
   isLoading: boolean;
   isError: boolean;
@@ -30,6 +30,7 @@ export function useStatus(): {
       // Null data = failed fetch; throw so React Query retries.
       throw new Error('fetch failed');
     },
+    refetchInterval: refreshInterval,
     // gcTime / staleTime / networkMode / retry from queryClient defaults (lib/query.ts).
   });
 
