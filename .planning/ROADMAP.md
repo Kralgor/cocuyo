@@ -52,7 +52,7 @@ Plans:
 **Plans**: 7 plans
 Plans:
 - [x] 02-01-PLAN.md — Foundation: install deps, app.json (anon Supabase + expo-location), storage/i18n/jest mocks, parroquia schema doc + migration checkpoint
-- [ ] 02-02-PLAN.md — Wave 0: curate parroquias.json (incl. Zulia + DC) + contacts.json; 5 failing unit-test files
+- [x] 02-02-PLAN.md — Wave 0: curate parroquias.json (incl. Zulia + DC) + contacts.json; 5 failing unit-test files
 - [ ] 02-03-PLAN.md — Reporting core: submitReport (anon POST), MMKV offline queue (idempotent + cooldown), GPS nearest-zone detection
 - [ ] 02-04-PLAN.md — Share lib (composeShareText honesty + WhatsApp/system fallback) + parroquias lookup
 - [ ] 02-05-PLAN.md — AMOLED theme/context + useBattery + battery-adaptive useStatus + useReportQueue auto-sync
@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Offline Core | 5/6 | In Progress|  |
-| 2. Reporting + Sharing + Quick Wins | 1/7 | In Progress|  |
+| 2. Reporting + Sharing + Quick Wins | 2/7 | In Progress|  |
 | 3. Push Notifications | 0/TBD | Not started | - |
 | 4. Food Spoilage Timers | 0/TBD | Not started | - |
 | 5. Polish + Store Submission | 0/TBD | Not started | - |
