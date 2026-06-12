@@ -16,7 +16,9 @@ function getStatusLabel(status: string, lang: Lang): string {
   return STATUS_LABELS[status]?.[lang] ?? status;
 }
 
-export function composeShareText(region: RegionEntry, _regionKey: string, lang: Lang = 'es'): string {
+type ShareableRegion = Pick<RegionEntry, 'display_name' | 'status'> & Partial<Pick<RegionEntry, 'outage'>>;
+
+export function composeShareText(region: ShareableRegion, _regionKey: string, lang: Lang = 'es'): string {
   const lines = [`*${region.display_name}* — ${getStatusLabel(region.status, lang)}`];
 
   if (region.outage?.started_at && typeof region.outage.elapsed_minutes === 'number') {
