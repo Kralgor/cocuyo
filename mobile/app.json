@@ -56,6 +56,12 @@
       ],
       "expo-localization",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Cocuyo usa tu ubicación para detectar tu zona automáticamente."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
@@ -69,6 +75,8 @@
     ],
     "extra": {
       "statusCdnUrl": "https://cocuyo.kralgor.com/status.json",
+      "supabaseUrl": "https://wobbxgcslwibgbtvkbxz.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvYmJ4Z2NzbHdpYmdidHZrYnh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMTQyMjQsImV4cCI6MjA5NDg5MDIyNH0.30L-OpjUxqphVi6VjwX3dTjMnQI1LdlZ_gfn2bQDdyA",
       "router": {},
       "eas": {
         "projectId": "53f480cb-b4e4-420e-8be7-c36e78bc914c"

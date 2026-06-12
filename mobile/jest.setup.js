@@ -36,3 +36,27 @@ jest.mock('@react-native-community/netinfo', () => ({
   addEventListener: jest.fn(() => () => {}),
   fetch: jest.fn(() => Promise.resolve({ isConnected: true })),
 }));
+
+jest.mock('expo-location', () => ({
+  Accuracy: {
+    Balanced: 3,
+  },
+  requestForegroundPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted', granted: true })),
+  getCurrentPositionAsync: jest.fn(() =>
+    Promise.resolve({
+      coords: {
+        latitude: 10.4806,
+        longitude: -66.9036,
+      },
+    }),
+  ),
+}));
+
+jest.mock('expo-battery', () => ({
+  getBatteryLevelAsync: jest.fn(() => Promise.resolve(0.85)),
+  addBatteryLevelListener: jest.fn(() => ({ remove: jest.fn() })),
+}));
+
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => 'mock-uuid-1234'),
+}));

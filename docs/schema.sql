@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS outage_reports (
     device_fingerprint   TEXT,
     onset_type           TEXT,                   -- null in Phase 1
     symptom              TEXT,                   -- null in Phase 1
-    city_freetext        TEXT,                   -- for region = 'unlisted'
+  city_freetext        TEXT,                   -- for region = 'unlisted'
+  parroquia            TEXT,                   -- optional Phase 2 zone refinement
     confirmed_by_passive BOOLEAN DEFAULT FALSE
 );
 
@@ -38,7 +39,10 @@ CREATE INDEX IF NOT EXISTS idx_reports_recent
 CREATE INDEX IF NOT EXISTS idx_reports_device
     ON outage_reports (device_fingerprint, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reports_ip_hash
-    ON outage_reports (ip_hash, created_at DESC);
+ON outage_reports (ip_hash, created_at DESC);
+
+ALTER TABLE outage_reports
+ADD COLUMN IF NOT EXISTS parroquia TEXT;
 
 
 CREATE TABLE IF NOT EXISTS outage_history (
@@ -124,8 +128,11 @@ GRANT INSERT (
     onset_type,
     symptom,
     device_fingerprint,
-    city_freetext
+  city_freetext,
+  parroquia
 ) ON outage_reports TO anon;
+
+GRANT INSERT (parroquia) ON outage_reports TO anon;
 
 
 -- ============================================================

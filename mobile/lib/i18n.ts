@@ -78,6 +78,32 @@ const STRINGS: StringMap = {
 
   // ── misc ──────────────────────────────────────────────────────────────────
   open_settings:        { es: 'Abrir ajustes',                                          en: 'Open settings' },
+  report_title:         { es: 'Reportar luz',                                     en: 'Report power' },
+  gps_resolving:        { es: 'Detectando zona...',                               en: 'Detecting zone...' },
+  gps_resolved:         { es: 'Zona detectada: {name}',                           en: 'Zone detected: {name}' },
+  gps_manual:           { es: 'Elegir zona manualmente',                          en: 'Choose zone manually' },
+  report_out:           { es: 'Se fue la luz',                                    en: 'Power went out' },
+  report_back:          { es: 'Volvió la luz',                                    en: 'Power came back' },
+  cooldown_notice:      { es: 'Ya reportaste hace poco. Intenta de nuevo en {N} min.', en: 'You reported recently. Try again in {N} min.' },
+  queue_pending_header: { es: 'Reportes pendientes',                              en: 'Pending reports' },
+  queue_pending_body:   { es: '{N} reporte(s) se enviarán cuando vuelva la conexión.', en: '{N} report(s) will send when connection returns.' },
+  confirm_title:        { es: 'Confirmar reporte',                                en: 'Confirm report' },
+  zone_label:           { es: 'Zona: {name}',                                     en: 'Zone: {name}' },
+  parroquia_label:      { es: 'Parroquia (opcional)',                             en: 'Parroquia (optional)' },
+  submit_report:        { es: 'Enviar reporte',                                  en: 'Send report' },
+  toast_sent:           { es: 'Reporte enviado. ¡Gracias!',                      en: 'Report sent. Thank you!' },
+  toast_queued:         { es: 'Guardado - se enviará al volver la conexión',     en: 'Saved - will send when connection returns' },
+  toast_synced:         { es: 'Reportes pendientes enviados',                    en: 'Pending reports sent' },
+  toast_failed:         { es: 'No se pudo enviar. Inténtalo de nuevo.',          en: 'Could not send. Try again.' },
+  contacts_header:      { es: 'Números útiles',                                  en: 'Useful numbers' },
+  contacts_unverified:  { es: 'por verificar',                                   en: 'unverified' },
+  contacts_a11y:        { es: '{name}: {number}. Toca para llamar.',             en: '{name}: {number}. Tap to call.' },
+  share_prompt_heading: { es: 'Avisas a tus vecinos?',                           en: 'Tell your neighbors?' },
+  share_prompt_body:    { es: 'Comparte el estado de tu zona en WhatsApp',       en: 'Share your zone status on WhatsApp' },
+  share_prompt_cta:     { es: 'Compartir',                                       en: 'Share' },
+  battery_saving_banner:{ es: 'Batería baja: actualizamos con menos frecuencia.', en: 'Low battery: updates are less frequent.' },
+  battery_banner_a11y:  { es: 'Modo de ahorro de batería activo',                en: 'Battery saving mode active' },
+  theme_amoled:         { es: 'AMOLED',                                          en: 'AMOLED' },
 };
 
 // ── tt ─────────────────────────────────────────────────────────────────────────

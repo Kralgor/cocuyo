@@ -86,7 +86,7 @@ Paste into Supabase Dashboard → SQL Editor and run once.
 outage_reports columns:
 - id, created_at — auto
 - region, status — required user input; status CHECK IN ('no_power','power_back','unstable')
-- lat, lon, onset_type, symptom, device_fingerprint, city_freetext — optional user input
+- lat, lon, onset_type, symptom, device_fingerprint, city_freetext, parroquia — optional user input
 - ip_hash — TRIGGER-computed, never client-supplied; anon has no INSERT grant on this column
 - state — pipeline-derived (REGION_TO_STATE in regions.py), not user input
 - sub_zone, duration_min — null Phase 1-2; server-side only
@@ -108,7 +108,7 @@ outage_history + active_outages: see docs/schema.sql for full DDL.
 | active_outages | no access | full access |
 
 anon INSERT columns (GRANT-level restriction, not just policy):
-  region, lat, lon, status, onset_type, symptom, device_fingerprint, city_freetext
+  region, lat, lon, status, onset_type, symptom, device_fingerprint, city_freetext, parroquia
 
 Server-side only (no anon grant): ip_hash, state, sub_zone, duration_min, confirmed_by_passive
 

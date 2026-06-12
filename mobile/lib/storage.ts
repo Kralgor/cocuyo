@@ -17,6 +17,8 @@ export const storage = createMMKV({ id: 'cocuyo' });
 export const STORAGE_KEYS = {
   hasSeenOnboarding: 'hasSeenOnboarding',          // boolean — trust screen shown once (D-08)
   selectedZone:      'selectedZone',               // string  — canonical region key from regions.ts
-  themeOverride:     'themeOverride',              // 'light' | 'dark' | null (missing = follow system)
+  themeOverride:     'themeOverride',              // 'light' | 'dark' | 'amoled' | null (missing = follow system)
   cacheTimestamp:    'statusCacheTimestamp',       // number  — epoch ms of last successful fetchStatus()
+  reportQueue:       'reportQueue',                // JSON-serialized QueuedReport[]
+  lastReportTime:    'lastReportTime',             // epoch ms of last enqueue for 30-min dedup
 } as const;
