@@ -27,7 +27,7 @@ Awaiting physical-device or development-build smoke test.
    result: pending
 
 5. expected: Before actual release, Expo push security is enabled and `EXPO_ACCESS_TOKEN` is configured in GitHub environment `cocuyo`.
-   result: pending
+   result: token generated; GitHub secret still needs to be stored because local `gh` auth is invalid.
 
 ## Summary
 
