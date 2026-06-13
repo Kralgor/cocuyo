@@ -10,7 +10,8 @@ updated: 2026-06-13
 
 ## Current Test
 
-Awaiting physical-device or development-build smoke test.
+Android preview build started for physical-device smoke test:
+https://expo.dev/accounts/kralgor/projects/cocuyo/builds/3d9b2646-bc27-4ecc-a8dc-084ca3c8eac9
 
 ## Tests
 
