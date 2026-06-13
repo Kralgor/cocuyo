@@ -286,3 +286,26 @@ caracas, maracaibo, valencia, barquisimeto, maracay,
 ciudad_guayana, san_cristobal, merida, barinas,
 maturin, cumana, punto_fijo, los_teques, porlamar,
 barcelona, guarenas_guatire, valera
+## Phase 3 Push Fan-Out
+
+### Component Responsibilities
+
+| Component | Responsibility |
+| --- | --- |
+| `push_tokens` | Anonymous device subscriptions. Mobile writes with the anon key; pipeline reads with service_role. |
+| `notification_log` | Service-role-only cooldown, receipt, and Expo ticket tracking for sent notifications. |
+| `pipeline/notify.py` | Push fan-out worker. Converts lifecycle events into Expo Push API messages and records notification_log rows. |
+
+### Data Flow
+
+`process_lifecycle()` returns new outages and restorations. `pipeline/notify.py`
+reads matching `push_tokens` with the service_role key, expands saved-zone neighbor
+notifications through `ADJACENCY_MAP`, sends batches to the Expo Push API, and
+writes `notification_log` for cooldown and delivery tracking.
+
+### Boundary
+
+The ADR-007 two-key boundary stays intact: mobile clients can INSERT/UPDATE
+`push_tokens` with the anon key, but only the pipeline service_role reads tokens
+and writes `notification_log`. Fan-out happens pipeline-side and does not add a
+read server to the static JSON app surface.

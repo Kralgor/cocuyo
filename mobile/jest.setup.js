@@ -60,3 +60,17 @@ jest.mock('expo-battery', () => ({
 jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'mock-uuid-1234'),
 }));
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn().mockResolvedValue(null),
+  getPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+  requestPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+  getExpoPushTokenAsync: jest.fn().mockResolvedValue({ data: 'ExponentPushToken[test123]' }),
+  AndroidImportance: { HIGH: 4, MAX: 5 },
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+}));
+
+jest.mock('expo-device', () => ({
+  isDevice: true,
+}));

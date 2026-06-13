@@ -61,6 +61,7 @@
           "locationWhenInUsePermission": "Cocuyo usa tu ubicación para detectar tu zona automáticamente."
         }
       ],
+      "expo-notifications",
       [
         "expo-build-properties",
         {

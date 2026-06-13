@@ -121,6 +121,30 @@ REGIONS: dict[str, RegionMeta] = {
     },
 }
 
+# ── adjacency map ──
+# Source: Phase 3 CONTEXT.md D-07. If A lists B, B must list A.
+# Changes MUST be mirrored in mobile/lib/regions.ts ADJACENCY_MAP.
+ADJACENCY_MAP: dict[str, list[str]] = {
+    "maracaibo": ["punto_fijo", "valera"],
+    "punto_fijo": ["maracaibo", "barquisimeto"],
+    "san_cristobal": ["merida", "barinas"],
+    "merida": ["san_cristobal", "valera", "barinas"],
+    "valera": ["merida", "maracaibo", "barquisimeto", "barinas"],
+    "barinas": ["san_cristobal", "merida", "valera", "barquisimeto"],
+    "barquisimeto": ["punto_fijo", "valera", "barinas", "valencia"],
+    "valencia": ["barquisimeto", "maracay"],
+    "maracay": ["valencia", "los_teques", "caracas"],
+    "caracas": ["los_teques", "guarenas_guatire", "maracay"],
+    "los_teques": ["caracas", "maracay", "guarenas_guatire"],
+    "guarenas_guatire": ["caracas", "los_teques", "barcelona"],
+    "barcelona": ["guarenas_guatire", "cumana", "maturin"],
+    "cumana": ["barcelona", "porlamar", "maturin"],
+    "maturin": ["barcelona", "cumana", "ciudad_guayana"],
+    "porlamar": ["cumana"],
+    "ciudad_guayana": ["maturin"],
+}
+
+
 # Derived lookup: region key → state name.
 # Used by pipeline to backfill the state column on outage_reports.
 REGION_TO_STATE: dict[str, str] = {k: v["state"] for k, v in REGIONS.items()}

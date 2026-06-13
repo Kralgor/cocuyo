@@ -123,6 +123,34 @@ export interface QueuedReport {
   attempts: number;
 }
 
+export interface PushTokenPayload {
+  expo_token: string;
+  zone: string;
+  platform: 'android' | 'ios';
+  notify_outage: boolean;
+  notify_restoration: boolean;
+  notify_neighbor: boolean;
+}
+
+export async function registerToken(
+  payload: PushTokenPayload
+): Promise<{ ok: boolean; offline: boolean }> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/push_tokens`, {
+      method: 'POST',
+      headers: {
+        ...REPORT_HEADERS,
+        Prefer: 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    return { ok: res.ok, offline: false };
+  } catch {
+    return { ok: false, offline: true };
+  }
+}
+
 export async function submitReport(payload: ReportPayload): Promise<void> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
     method: 'POST',

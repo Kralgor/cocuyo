@@ -116,6 +116,28 @@ export const REGIONS: Record<string, RegionMeta> = {
 };
 
 // ── zone picker sections ───────────────────────────────────────────────────────
+// Mirrored verbatim from pipeline/regions.py ADJACENCY_MAP.
+// Pipeline is canonical; changes here MUST match it exactly.
+export const ADJACENCY_MAP: Record<string, string[]> = {
+  maracaibo: ['punto_fijo', 'valera'],
+  punto_fijo: ['maracaibo', 'barquisimeto'],
+  san_cristobal: ['merida', 'barinas'],
+  merida: ['san_cristobal', 'valera', 'barinas'],
+  valera: ['merida', 'maracaibo', 'barquisimeto', 'barinas'],
+  barinas: ['san_cristobal', 'merida', 'valera', 'barquisimeto'],
+  barquisimeto: ['punto_fijo', 'valera', 'barinas', 'valencia'],
+  valencia: ['barquisimeto', 'maracay'],
+  maracay: ['valencia', 'los_teques', 'caracas'],
+  caracas: ['los_teques', 'guarenas_guatire', 'maracay'],
+  los_teques: ['caracas', 'maracay', 'guarenas_guatire'],
+  guarenas_guatire: ['caracas', 'los_teques', 'barcelona'],
+  barcelona: ['guarenas_guatire', 'cumana', 'maturin'],
+  cumana: ['barcelona', 'porlamar', 'maturin'],
+  maturin: ['barcelona', 'cumana', 'ciudad_guayana'],
+  porlamar: ['cumana'],
+  ciudad_guayana: ['maturin'],
+};
+
 // 17 zones grouped by state for SectionList in ZonePicker.
 // Miranda groups los_teques + guarenas_guatire (two zones, one state).
 // Source: RESEARCH.md Pattern 6

@@ -21,4 +21,8 @@ export const STORAGE_KEYS = {
   cacheTimestamp:    'statusCacheTimestamp',       // number  — epoch ms of last successful fetchStatus()
   reportQueue:       'reportQueue',                // JSON-serialized QueuedReport[]
   lastReportTime:    'lastReportTime',             // epoch ms of last enqueue for 30-min dedup
+  pushPermissionGranted: 'pushPermissionGranted',
+  notifyOutage: 'notifyOutage',
+  notifyRestoration: 'notifyRestoration',
+  notifyNeighbor: 'notifyNeighbor',
 } as const;
