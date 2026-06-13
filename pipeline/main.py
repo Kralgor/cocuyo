@@ -329,11 +329,21 @@ def run(now: datetime | None = None) -> dict:
             supabase_client=supabase_client if phase >= 2 else None,
         )
 
+    lifecycle_result = {"new_outages": [], "restorations": []}
+
     if phase >= 2 and supabase_client is not None:
         try:
-            process_lifecycle(region_output, now, supabase_client)
+            lifecycle_result = process_lifecycle(region_output, now, supabase_client)
         except Exception as exc:
             logger.error("lifecycle failed: %s", exc)
+
+    if phase >= 3 and supabase_client is not None:
+        try:
+            from pipeline.notify import send_notifications
+
+            send_notifications(lifecycle_result, region_output, supabase_client, now=now)
+        except Exception as exc:
+            logger.warning("notify fan-out failed (non-fatal): %s", exc)
 
     return build_status_json(now, phase, collector_errors, region_output)
 
