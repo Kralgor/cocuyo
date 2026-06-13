@@ -33,7 +33,7 @@ Last activity: 2026-06-12
 Progress: [██████████] 100%
 
 Outstanding (non-blocking): on-device APK smoke test (async), iOS build (Apple Developer Program), 10 deferred code-review warnings/info items.
-Next: Phase 02 — Reporting + Sharing + Quick Wins.
+Next: Phase 03 — Push Notifications (ready to plan).
 
 ## Performance Metrics
 
