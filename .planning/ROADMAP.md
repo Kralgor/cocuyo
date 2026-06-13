@@ -70,7 +70,13 @@ Plans:
   3. User receives a push notification when a neighboring zone experiences an outage (early warning)
   4. Pipeline detects status transitions (previous vs current zone status) and fires Expo Push API on changes
   5. Device push tokens with zone subscriptions are stored in Supabase push_tokens table and resolved at notification time
-**Plans**: TBD
+**Plans**: 6 plans
+- [ ] 03-01-PLAN.md — Wave 0: failing offline tests for pipeline fan-out and mobile token registration
+- [ ] 03-02-PLAN.md — Manual credential gate: Firebase FCM V1 and optional Expo push security
+- [ ] 03-03-PLAN.md — Schema and adjacency foundation: push_tokens, notification_log, ADJACENCY_MAP
+- [ ] 03-04-PLAN.md — Mobile registration plumbing: expo-notifications, registerToken, storage keys, adjacency mirror
+- [ ] 03-05-PLAN.md — Pipeline fan-out: notify.py, cooldown, unstable suppression, Expo batch send
+- [ ] 03-06-PLAN.md — Notify tab opt-in UX, permission helper, preferences hook, toggle sync
 
 ### Phase 4: Food Spoilage Timers
 **Goal**: Users can track food safety during outages using a pre-built Venezuelan food list, custom items, and automatic timer start on outage detection

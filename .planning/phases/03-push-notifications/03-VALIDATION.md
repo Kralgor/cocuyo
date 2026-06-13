@@ -2,8 +2,8 @@
 phase: 3
 slug: push-notifications
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-13
 ---
 
@@ -74,4 +74,4 @@ created: 2026-06-13
 - [ ] Feedback latency < 60s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** complete — Phase 3 plan set now includes Wave 0 tests, credential gate, schema/adjacency foundation, mobile registration plumbing, pipeline fan-out, and Notify tab opt-in UX.
