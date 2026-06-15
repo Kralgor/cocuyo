@@ -46,3 +46,27 @@ Constraints captured:
 ## Reviewed Todos
 
 - "Parroquia-level reporting (hyperlocal)" was reviewed as a weak match and not folded into Phase 4 because it belongs to reporting/scoring scope, not food timers.
+
+## Appendix — 2026-06-15
+
+User selected append mode for the existing Phase 4 context.
+
+### Timer Presets
+- Presented: tiny fixed set vs broader grocery list vs Claude decide.
+- Decision: Claude decide, constrained to basic groceries and no pantry-management expansion.
+
+### Auto-Start Behavior
+- Presented: automatic start vs prompt first.
+- Decision: prompt or notify the user when an outage is detected so they can review/confirm food timers.
+
+### Power-Restored Behavior
+- Presented: pause, reset, or continue until confirmation.
+- Decision: reset timers when power is restored.
+
+### Warning Tone
+- Presented: cautious early warning vs hard-limit warning.
+- Decision: cautious warnings.
+
+### Offline/Stale Status
+- Presented: keep counting from last known outage start vs manual-only.
+- Decision: keep counting.

@@ -41,6 +41,13 @@ Covers requirements: FOOD-01 (pre-built food list), FOOD-02 (custom food items),
 ### Claude's Discretion
 - Exact basic-grocery item list, default thresholds, warning lead time, timer card layout, local notification scheduling details, and whether power restoration pauses or stops timers are delegated to Claude/planner, as long as the implementation stays simple, factual, offline-capable, and limited to basic groceries.
 
+### 2026-06-15 Clarifications
+- **D-14:** Timer presets are Claude/planner discretion. Keep the list compact and practical for basic groceries; do not expand into pantry-management scope.
+- **D-15:** When an outage is detected for the saved zone, do not silently start a confusing background workflow. Prompt the user in-app when they are active, and use a notification when appropriate so they can confirm or review food timers.
+- **D-16:** When power is restored, reset active food timers rather than pausing them indefinitely or keeping them running after restoration.
+- **D-17:** Spoilage warnings should be cautious and early. Prefer clear advance warning before a hard safety limit over only warning at the final threshold.
+- **D-18:** If outage status is stale or the app is offline, timers should keep counting from the last known outage start instead of switching to manual-only mode.
+
 </decisions>
 
 <canonical_refs>
