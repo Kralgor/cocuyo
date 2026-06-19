@@ -26,4 +26,9 @@ export const STORAGE_KEYS = {
   notifyOutage: 'notifyOutage',
   notifyRestoration: 'notifyRestoration',
   notifyNeighbor: 'notifyNeighbor',
+  // ── food spoilage timers (Phase 4) ── local/offline only (D-06), no backend/sync/sensors
+  foodTrackedItems: 'foodTrackedItems',            // JSON-serialized TrackedFoodItem[]
+  foodTimerState: 'foodTimerState',                // JSON — timer anchor/outage-start cache
+  foodNotificationPrefs: 'foodNotificationPrefs',  // JSON — per-food/global notification toggles
+  foodDismissedWarnings: 'foodDismissedWarnings',  // JSON — dismissed warning IDs for current outage
 } as const;
