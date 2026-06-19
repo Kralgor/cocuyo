@@ -111,7 +111,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation + Offline Core | 5/6 | In Progress|  |
 | 2. Reporting + Sharing + Quick Wins | 7/7 | Complete   | 2026-06-12 |
 | 3. Push Notifications | 0/TBD | Not started | - |
-| 4. Food Spoilage Timers | 0/TBD | Not started | - |
+| 4. Food Spoilage Timers | 1/4 | In Progress|  |
 | 5. Polish + Store Submission | 0/TBD | Not started | - |
 
 ---
