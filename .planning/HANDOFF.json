@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-19T20:45:41Z",
+  "phase": "04",
+  "phase_name": "food-spoilage-timers",
+  "phase_dir": ".planning/phases/04-food-spoilage-timers",
+  "plan": 4,
+  "task": null,
+  "total_tasks": 18,
+  "status": "phase_complete_code_level",
+  "branch": "phase-04-food-timers",
+  "completed_tasks": [
+    {"id": "04-01", "name": "Food domain model + presets + MMKV helpers", "status": "done", "commit": "f978928"},
+    {"id": "04-02", "name": "Food timer lifecycle state layer + useFoodTimers", "status": "done", "commit": "81e60ca"},
+    {"id": "04-03", "name": "Spanish-first Food tab UI", "status": "done", "commit": "3f34979"},
+    {"id": "04-04", "name": "Local food spoilage notifications", "status": "done", "commit": "b828e32"},
+    {"id": "04-verify", "name": "Phase verification (PASS code-level)", "status": "done", "commit": "33fa3f4"}
+  ],
+  "remaining_tasks": [],
+  "blockers": [],
+  "human_actions_pending": [
+    {"action": "G1: confirm no OS notification prompt fires until explicit enable tap", "context": "point-of-use permission (ADR), unprovable by jest", "blocking": true},
+    {"action": "G2: confirm local notification actually delivers at fire time on device", "context": "expo-notifications scheduling is mocked in tests", "blocking": true},
+    {"action": "G3: confirm restoration/reset cancels scheduled warnings in live OS queue", "context": "cancel path tested only against mock", "blocking": true},
+    {"action": "G4: decide Android channel — food scheduling sets NO explicit channelId, falls back to Default not the 'outages' HIGH channel; accept or add a food channel", "context": "code decision, do before device build", "blocking": true},
+    {"action": "G5: iOS local notification delivery + Apple Developer Program enrollment / EAS build", "context": "pre-existing phase blocker, iOS APNs path", "blocking": true},
+    {"action": "Merge branch phase-04-food-timers when ready (user owns merge + push per CLAUDE.md)", "context": "all Phase 4 work isolated on this branch, never pushed", "blocking": false}
+  ],
+  "decisions": [
+    {"decision": "Ran 4 plans sequentially on main working tree, not parallel worktrees", "rationale": "Plan frontmatter defines a strict linear dependency chain (04-01<-02<-03<-04) sharing food.ts/food.tsx; parallel dispatch off one base would break the chain and collide on shared files", "phase": "04"},
+    {"decision": "Discarded phase-plan-index query output", "rationale": "It reported all 4 plans as wave 1 / no deps / empty files_modified — wrong; PLAN.md frontmatter was authoritative (logged as skill observation #2)", "phase": "04"},
+    {"decision": "isFoodOutageStatus accepts no_power, confirmed_outage, likely_outage; excludes unstable", "rationale": "unstable is bajon instability not power loss; surfaces as uncertainty (D-08), never auto-start", "phase": "04"},
+    {"decision": "Documented on-device validation as binary human gates, not generic UAT-pending", "rationale": "skill observation #1 — Phase 3 shipped 'complete' but was non-functional because FCM was never provisioned", "phase": "04"}
+  ],
+  "uncommitted_files": [
+    ".planning/config.json (pre-existing noise)",
+    "app/tsconfig.tsbuildinfo (build artifact)",
+    "pipeline/__pycache__/*.pyc (build artifacts)",
+    ".planning/codebase/ (untracked)",
+    "skill-observations/ (untracked — task-observer log)"
+  ],
+  "next_action": "Decide G4 (Android food notification channel) at code level, then run on-device validation of G1-G3,G5. Separately: merge phase-04-food-timers into main when satisfied.",
+  "context_notes": "Phase 4 is CODE-COMPLETE and verified: 185 mobile jest tests pass, tsc --noEmit clean, zero code-level gaps. All work isolated on branch phase-04-food-timers (NOT pushed, NOT merged). Status is human_needed only because OS-level notification behavior (permission/delivery/cancellation/channel/iOS) cannot be proven by automated tests. The fully local/offline MMKV design means there are NO external credentials or backend for food state — unlike Phase 3 push notifications. Outstanding weekly skill review (no last-review-date.txt) was flagged but not run."
+}
