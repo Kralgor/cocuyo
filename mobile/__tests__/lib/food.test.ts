@@ -9,6 +9,7 @@
  * mocked to a fixed value, so id-sensitive tests assign ids explicitly.
  */
 
+import { tt } from '../../lib/i18n';
 import {
   FOOD_PRESETS,
   classifyFoodTimer,
@@ -222,5 +223,48 @@ describe('tracked food MMKV helpers (D-06, D-13)', () => {
     const items = readTrackedFoodItems();
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('ok');
+  });
+});
+
+// ── Food tab copy keys (Phase 4 plan 03 UI surface) ──────────────────────────────
+
+describe('food tab i18n keys (plan 03)', () => {
+  const keys = [
+    'food_title',
+    'food_subtitle',
+    'food_empty_tracked',
+    'food_presets_h',
+    'food_custom_h',
+    'food_active_h',
+    'food_tracked_h',
+    'food_outage_prompt',
+    'food_stale_note',
+    'food_offline_note',
+    'food_restored_h',
+    'food_restored_note',
+    'food_level_safe',
+    'food_level_warning',
+    'food_level_expired',
+    'food_caution_early',
+    'food_add_preset',
+    'food_remove',
+    'food_reset',
+    'food_close',
+    'food_alerts_h',
+    'food_alerts_body',
+    'food_alerts_enable',
+  ];
+
+  it('resolves every food copy key to a non-key Spanish string', () => {
+    for (const k of keys) {
+      const es = tt(k, 'es');
+      expect(es).not.toBe(k);
+      expect(es.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  it('restored and warning copy never declare food safe', () => {
+    expect(tt('food_restored_note', 'es').toLowerCase()).not.toContain('segura');
+    expect(tt('food_level_expired', 'es').toLowerCase()).not.toContain('bota');
   });
 });

@@ -12,6 +12,7 @@ import {
   deriveFoodTimerSession,
   deriveOutageStart,
   dismissRestoredFoodReview,
+  getFoodTimerProgress,
   idleFoodTimerSession,
   isFoodOutageStatus,
   readFoodTimerState,
@@ -289,5 +290,66 @@ describe('food timer state persistence', () => {
     );
     expect(acked.needsOutageReviewPrompt).toBe(false);
     expect(acked.acknowledgedOutagePromptAt).toBe(NOW);
+  });
+});
+
+// ── UI-adjacent state (plan 03) ──────────────────────────────────────────────────
+// These mirror what the Food screen renders without a brittle screen render test.
+
+describe('food timer UI-adjacent state (plan 03)', () => {
+  it('outage prompt can be acknowledged so the in-app banner stops showing', () => {
+    const active = deriveFoodTimerSession({
+      previous: idleFoodTimerSession(),
+      selectedZone: 'maracaibo',
+      region: region({ outage: { started_at: minutesAfter(NOW, -30) } as RegionEntry['outage'] }),
+      trackedItems: [trackedItem()],
+      now: NOW,
+    });
+    expect(active.needsOutageReviewPrompt).toBe(true);
+    const acked = acknowledgeFoodOutagePrompt(active, NOW);
+    expect(acked.needsOutageReviewPrompt).toBe(false);
+  });
+
+  it('restored review can be dismissed back to idle', () => {
+    writeFoodTimerState({
+      ...idleFoodTimerSession(),
+      status: 'restored_review',
+      restoredAt: NOW,
+    });
+    expect(dismissRestoredFoodReview().status).toBe('idle');
+  });
+
+  it('active timer card data exposes elapsed, remaining, and warning level', () => {
+    const card = getFoodTimerProgress(
+      trackedItem({ thresholdMinutes: 120, warningLeadMinutes: 30 }),
+      NOW,
+      minutesAfter(NOW, 100),
+    );
+    expect(card.elapsedMinutes).toBeCloseTo(100);
+    expect(card.remainingMinutes).toBeCloseTo(20);
+    expect(card.level).toBe('warning');
+  });
+
+  it('stale and offline flags remain visible on the derived active session', () => {
+    const baseActive: FoodTimerSession = {
+      status: 'active',
+      zone: 'maracaibo',
+      timerSessionId: 'maracaibo|x',
+      outageStartedAt: minutesAfter(NOW, -90),
+      source: 'status_outage_started_at',
+      startedAtLocal: NOW,
+    };
+    const next = deriveFoodTimerSession({
+      previous: baseActive,
+      selectedZone: 'maracaibo',
+      region: null,
+      isOffline: true,
+      isStatusStale: true,
+      trackedItems: [trackedItem()],
+      now: minutesAfter(NOW, 30),
+    });
+    expect(next.status).toBe('active');
+    expect(next.isOffline).toBe(true);
+    expect(next.isStatusStale).toBe(true);
   });
 });
