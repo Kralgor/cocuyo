@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { getLocales } from 'expo-localization';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { useFoodNotifications } from '@/hooks/useFoodNotifications';
 import { useFoodTimers, type FoodTimerCard } from '@/hooks/useFoodTimers';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -52,7 +53,18 @@ export default function FoodScreen() {
     removeItem,
     setItemEnabled,
     resetAllFoodTimers,
+    enabledTrackedItems,
   } = useFoodTimers();
+
+  const {
+    enabled: alertsEnabled,
+    permissionStatus,
+    busy: alertsBusy,
+    error: alertsError,
+    enableFoodAlerts,
+    disableFoodAlerts,
+    syncFoodNotifications,
+  } = useFoodNotifications();
 
   const zoneName = selectedZone ? REGIONS[selectedZone]?.display_name ?? selectedZone : null;
   const trackedPresetIds = useMemo(
@@ -66,9 +78,23 @@ export default function FoodScreen() {
   const [customHours, setCustomHours] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
 
-  // ── food alerts point-of-use placeholder (Task 4, NOTF-03) ────────────────────
-  // Local-only preference. No OS permission request on mount, no remote registration.
-  const [alertsArmed, setAlertsArmed] = useState(false);
+  // ── food alerts point-of-use (Task 4, NOTF-03, D-10, D-11) ────────────────────
+  // Scheduler sync runs only when alerts are enabled. No OS permission request
+  // on mount — only enableFoodAlerts() (a user tap) requests permission.
+  useEffect(() => {
+    if (!alertsEnabled) {
+      return;
+    }
+    void syncFoodNotifications(session, enabledTrackedItems);
+  }, [alertsEnabled, session, enabledTrackedItems, syncFoodNotifications]);
+
+  const onToggleAlerts = (value: boolean): void => {
+    if (value) {
+      void enableFoodAlerts();
+    } else {
+      void disableFoodAlerts();
+    }
+  };
 
   const levelToken = (level: FoodWarningLevel): string => {
     if (level === 'expired') return theme.danger;
@@ -93,6 +119,11 @@ export default function FoodScreen() {
 
   const restored = session.status === 'restored_review';
   const showStale = (isOffline || isStatusStale) && session.status === 'active';
+
+  const onResetAll = (): void => {
+    void disableFoodAlerts();
+    resetAllFoodTimers();
+  };
 
   return (
     <ScrollView
@@ -210,13 +241,26 @@ export default function FoodScreen() {
             {tt('food_alerts_enable', lang)}
           </Text>
           <Switch
-            value={alertsArmed}
-            onValueChange={setAlertsArmed}
-            thumbColor={alertsArmed ? theme.accent : theme.inkDim}
+            value={alertsEnabled}
+            onValueChange={onToggleAlerts}
+            disabled={alertsBusy}
+            thumbColor={alertsEnabled ? theme.accent : theme.inkDim}
             trackColor={{ false: theme.lineStrong, true: theme.accent }}
           />
         </View>
-        <Text style={[styles.hint, { color: theme.inkFaint }]}>{tt('food_alerts_soon', lang)}</Text>
+        {alertsError ? (
+          <Text style={[styles.warning, { color: theme.danger }]}>{alertsError}</Text>
+        ) : permissionStatus === 'denied' && !alertsEnabled ? (
+          <Text style={[styles.warning, { color: theme.danger }]}>
+            {tt('food_alerts_denied', lang)}
+          </Text>
+        ) : alertsEnabled ? (
+          <Text style={[styles.hint, { color: theme.ok }]}>{tt('food_alerts_on', lang)}</Text>
+        ) : (
+          <Text style={[styles.hint, { color: theme.inkFaint }]}>
+            {tt('food_alerts_off', lang)}
+          </Text>
+        )}
       </View>
 
       {/* ── tracked foods (D-05, D-13) ── */}
@@ -251,7 +295,7 @@ export default function FoodScreen() {
         )}
         {trackedItems.length > 0 ? (
           <Pressable
-            onPress={resetAllFoodTimers}
+            onPress={onResetAll}
             style={({ pressed }) => [styles.resetBtn, { opacity: pressed ? 0.6 : 1 }]}
           >
             <Text style={[styles.resetText, { color: theme.danger }]}>{tt('food_reset', lang)}</Text>

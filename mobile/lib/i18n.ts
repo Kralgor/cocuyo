@@ -145,6 +145,9 @@ const STRINGS: StringMap = {
   food_alerts_body:     { es: 'Recordatorios locales para los alimentos que sigues. Tu lista de comida no se envia a Cocuyo.', en: 'Local reminders for the foods you track. Your food list is never sent to Cocuyo.' },
   food_alerts_enable:   { es: 'Activar avisos de comida',                       en: 'Enable food alerts' },
   food_alerts_soon:     { es: 'Los avisos automaticos llegan en una proxima actualizacion.', en: 'Automatic alerts arrive in a coming update.' },
+  food_alerts_on:       { es: 'Avisos activos. Te avisaremos antes del limite, solo en este telefono.', en: 'Alerts on. We will remind you before the limit, on this phone only.' },
+  food_alerts_off:      { es: 'Avisos desactivados. No se pedira permiso hasta que los actives.', en: 'Alerts off. No permission is requested until you turn them on.' },
+  food_alerts_denied:   { es: 'Permiso de notificaciones denegado. Actívalo en los ajustes del telefono.', en: 'Notification permission denied. Enable it in phone settings.' },
 };
 
 // ── tt ─────────────────────────────────────────────────────────────────────────
