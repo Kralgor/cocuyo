@@ -24,14 +24,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **NOTF-01**: User receives push notification when power goes out in their zone
 - [ ] **NOTF-02**: User receives push notification when power is restored in their zone
-- [ ] **NOTF-03**: User receives push notification when food items approach spoilage limits
+- [x] **NOTF-03**: User receives push notification when food items approach spoilage limits
 - [ ] **NOTF-04**: User receives push notification when neighboring zones have outages (early warning)
 
 ### Food Safety
 
 - [x] **FOOD-01**: User can view pre-built list of common Venezuelan foods with spoilage times
 - [x] **FOOD-02**: User can add custom food items with their own spoilage thresholds
-- [ ] **FOOD-03**: Food timers auto-start when an outage is detected in user's zone
+- [x] **FOOD-03**: Food timers auto-start when an outage is detected in user's zone
 - [x] **FOOD-04**: User receives local notification when a food item is approaching its spoilage limit
 
 ### Trust & Privacy
@@ -109,11 +109,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REPT-03 | Phase 2 | Complete |
 | NOTF-01 | Phase 3 | Pending |
 | NOTF-02 | Phase 3 | Pending |
-| NOTF-03 | Phase 4 | Pending |
+| NOTF-03 | Phase 4 | Complete |
 | NOTF-04 | Phase 3 | Pending |
 | FOOD-01 | Phase 4 | Complete |
 | FOOD-02 | Phase 4 | Complete |
-| FOOD-03 | Phase 4 | Pending |
+| FOOD-03 | Phase 4 | Complete |
 | FOOD-04 | Phase 4 | Complete |
 | TRST-01 | Phase 1 | Pending |
 | TRST-02 | Phase 1 | Pending |
