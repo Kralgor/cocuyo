@@ -9,6 +9,7 @@
 // not measurements.
 import * as Crypto from 'expo-crypto';
 
+import type { RegionEntry } from './api';
 import { STORAGE_KEYS, storage } from './storage';
 
 // ── types ────────────────────────────────────────────────────────────────────
@@ -78,6 +79,201 @@ export interface FoodTimerProgress {
   remainingMinutes: number;
   percent: number;
   level: FoodWarningLevel;
+}
+
+// ── timer session lifecycle (FOOD-03, FOOD-04, Phase 4 plan 02) ─────────────────
+// A FoodTimerSession is the local/offline state (D-06) tying the saved-zone
+// outage status to tracked foods. It is derived purely from inputs and persisted
+// in MMKV. It never declares food safe (D-07) and stays honest about
+// stale/offline uncertainty (D-08).
+
+export type FoodTimerSessionStatus = 'idle' | 'active' | 'restored_review';
+
+export type FoodTimerOutageSource =
+  | 'status_outage_started_at'
+  | 'status_elapsed_minutes'
+  | 'detected_at'
+  | null;
+
+export interface FoodTimerSession {
+  status: FoodTimerSessionStatus;
+  zone: string | null;
+  timerSessionId: string | null;
+  outageStartedAt: string | null;
+  source: FoodTimerOutageSource;
+  /** ISO time the session first became active locally. */
+  startedAtLocal: string | null;
+  /** status.json updated_at at last derivation, for staleness display. */
+  lastStatusUpdatedAt?: string;
+  isStatusStale?: boolean;
+  isOffline?: boolean;
+  /** Set true when a fresh outage begins so the UI/notification can prompt (D-15). */
+  needsOutageReviewPrompt?: boolean;
+  /** ISO time the outage was observed restored (D-07, D-16). */
+  restoredAt?: string;
+  /** ISO time the user acknowledged the outage review prompt. */
+  acknowledgedOutagePromptAt?: string;
+}
+
+/** Outage-equivalent status strings used by the mobile status UI. */
+const FOOD_OUTAGE_STATUSES: ReadonlySet<string> = new Set([
+  'no_power', // region.status — primary mobile outage value (lib/theme.ts)
+  'confirmed_outage', // outage.type values surfaced by the pipeline
+  'likely_outage',
+]);
+
+export function isFoodOutageStatus(status: string | null | undefined): boolean {
+  if (!status) {
+    return false;
+  }
+  return FOOD_OUTAGE_STATUSES.has(status);
+}
+
+export function idleFoodTimerSession(): FoodTimerSession {
+  return {
+    status: 'idle',
+    zone: null,
+    timerSessionId: null,
+    outageStartedAt: null,
+    source: null,
+    startedAtLocal: null,
+  };
+}
+
+/**
+ * Derive the best-known outage start for a region (D-18). Prefers
+ * `outage.started_at`, then derives from `outage.elapsed_minutes`, then falls
+ * back to local detection time. Returns the ISO start and its source.
+ */
+export function deriveOutageStart(
+  region: Pick<RegionEntry, 'outage'> | null | undefined,
+  now: string,
+): { outageStartedAt: string; source: FoodTimerOutageSource } {
+  const outage = region?.outage;
+  if (outage?.started_at && !Number.isNaN(Date.parse(outage.started_at))) {
+    return { outageStartedAt: outage.started_at, source: 'status_outage_started_at' };
+  }
+  if (
+    outage != null &&
+    typeof outage.elapsed_minutes === 'number' &&
+    Number.isFinite(outage.elapsed_minutes) &&
+    outage.elapsed_minutes >= 0
+  ) {
+    const nowMs = Date.parse(now);
+    const baseMs = Number.isNaN(nowMs) ? Date.now() : nowMs;
+    const startMs = baseMs - outage.elapsed_minutes * 60000;
+    return { outageStartedAt: new Date(startMs).toISOString(), source: 'status_elapsed_minutes' };
+  }
+  const nowMs = Date.parse(now);
+  const detected = Number.isNaN(nowMs) ? new Date().toISOString() : new Date(nowMs).toISOString();
+  return { outageStartedAt: detected, source: 'detected_at' };
+}
+
+function stableTimerSessionId(zone: string, outageStartedAt: string): string {
+  // Stable across re-derivations of the same outage in the same zone.
+  return `${zone}|${outageStartedAt}`;
+}
+
+export interface DeriveFoodTimerSessionInput {
+  previous: FoodTimerSession | null | undefined;
+  selectedZone: string | null | undefined;
+  region: RegionEntry | null | undefined;
+  /** status.json updated_at (for staleness display). */
+  statusUpdatedAt?: string;
+  isStatusStale?: boolean;
+  isOffline?: boolean;
+  trackedItems: TrackedFoodItem[];
+  now: string;
+}
+
+/**
+ * Pure lifecycle reducer. Given the previous session, the saved-zone region
+ * status, and tracked items, return the next session.
+ *
+ * - No zone / no enabled tracked foods / no outage → idle (unless previous
+ *   active just restored).
+ * - Region in outage + enabled tracked foods → active with a stable session id.
+ * - Fresh outage after idle → needsOutageReviewPrompt (D-15).
+ * - Previous active sees restoration / non-outage → restored_review, sets
+ *   restoredAt, clears active counting, never marks food safe (D-07, D-16).
+ * - Stale / offline while previous active → keep active, keep previous
+ *   outageStartedAt and counting (D-08, D-18).
+ */
+export function deriveFoodTimerSession(input: DeriveFoodTimerSessionInput): FoodTimerSession {
+  const { selectedZone, region, statusUpdatedAt, isStatusStale, isOffline, trackedItems, now } =
+    input;
+  const previous = input.previous ?? idleFoodTimerSession();
+  const zone = selectedZone ?? null;
+  const enabledCount = trackedItems.filter((it) => it.enabled).length;
+  const wasActive = previous.status === 'active';
+
+  const meta = {
+    lastStatusUpdatedAt: statusUpdatedAt,
+    isStatusStale: Boolean(isStatusStale),
+    isOffline: Boolean(isOffline),
+  };
+
+  // ── stale / offline while active: keep counting from previous start (D-18) ────
+  if (wasActive && (isOffline || isStatusStale) && (region == null || zone === previous.zone)) {
+    return { ...previous, ...meta };
+  }
+
+  const regionStatus = region?.status;
+  const outageType = region?.outage?.type;
+  const inOutage = isFoodOutageStatus(regionStatus) || isFoodOutageStatus(outageType);
+
+  // ── no zone or no enabled foods: nothing to track ─────────────────────────────
+  if (!zone || enabledCount === 0) {
+    // A previously active session that loses its zone/foods is treated as cleared.
+    return { ...idleFoodTimerSession(), ...meta };
+  }
+
+  // ── active outage in the saved zone ───────────────────────────────────────────
+  if (inOutage) {
+    // Continue an existing active session for the same zone/outage start.
+    if (wasActive && previous.zone === zone && previous.outageStartedAt) {
+      return {
+        ...previous,
+        status: 'active',
+        ...meta,
+      };
+    }
+    const { outageStartedAt, source } = deriveOutageStart(region, now);
+    const startedFromIdle = previous.status !== 'active';
+    return {
+      status: 'active',
+      zone,
+      timerSessionId: stableTimerSessionId(zone, outageStartedAt),
+      outageStartedAt,
+      source,
+      startedAtLocal: now,
+      needsOutageReviewPrompt: startedFromIdle ? true : previous.needsOutageReviewPrompt,
+      ...meta,
+    };
+  }
+
+  // ── restoration / non-outage while previously active: review state (D-07,D-16) ─
+  if (wasActive && previous.zone === zone) {
+    return {
+      status: 'restored_review',
+      zone,
+      timerSessionId: previous.timerSessionId,
+      outageStartedAt: previous.outageStartedAt,
+      source: previous.source,
+      startedAtLocal: previous.startedAtLocal,
+      restoredAt: now,
+      // Active counting is cleared by entering review; food is NOT declared safe.
+      ...meta,
+    };
+  }
+
+  // ── keep an existing review state until dismissed ─────────────────────────────
+  if (previous.status === 'restored_review' && previous.zone === zone) {
+    return { ...previous, ...meta };
+  }
+
+  // ── default: idle ─────────────────────────────────────────────────────────────
+  return { ...idleFoodTimerSession(), zone, ...meta };
 }
 
 // ── preset catalog (D-01, D-02, D-14) ──────────────────────────────────────────
@@ -349,4 +545,60 @@ export function removeTrackedFoodItem(id: string): TrackedFoodItem[] {
 
 export function resetTrackedFoodItems(): void {
   writeTrackedFoodItems([]);
+}
+
+// ── timer session state persistence (D-06, FOOD-03, FOOD-04) ────────────────────
+// Local/offline only. Defensive parsing (threat T-04-02-01): corrupt/tampered or
+// older-version JSON returns an idle session and never throws. No network code.
+
+function isFoodTimerSessionStatus(value: unknown): value is FoodTimerSessionStatus {
+  return value === 'idle' || value === 'active' || value === 'restored_review';
+}
+
+export function readFoodTimerState(): FoodTimerSession {
+  const raw = storage.getString(STORAGE_KEYS.foodTimerState);
+  if (!raw) {
+    return idleFoodTimerSession();
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      parsed == null ||
+      typeof parsed !== 'object' ||
+      !isFoodTimerSessionStatus((parsed as { status?: unknown }).status)
+    ) {
+      return idleFoodTimerSession();
+    }
+    // Normalize onto a known-good shape so missing fields are safe.
+    return { ...idleFoodTimerSession(), ...(parsed as FoodTimerSession) };
+  } catch {
+    return idleFoodTimerSession();
+  }
+}
+
+export function writeFoodTimerState(state: FoodTimerSession): void {
+  storage.set(STORAGE_KEYS.foodTimerState, JSON.stringify(state));
+}
+
+export function resetFoodTimerState(): void {
+  writeFoodTimerState(idleFoodTimerSession());
+}
+
+/** Clear the outage review prompt and record when the user acknowledged it (D-15). */
+export function acknowledgeFoodOutagePrompt(
+  state: FoodTimerSession,
+  nowIso: string,
+): FoodTimerSession {
+  return {
+    ...state,
+    needsOutageReviewPrompt: false,
+    acknowledgedOutagePromptAt: nowIso,
+  };
+}
+
+/** Dismiss the restored review banner, returning the session to idle (D-07, D-16). */
+export function dismissRestoredFoodReview(): FoodTimerSession {
+  const idle = idleFoodTimerSession();
+  writeFoodTimerState(idle);
+  return idle;
 }
