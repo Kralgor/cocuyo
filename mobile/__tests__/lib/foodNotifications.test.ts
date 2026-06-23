@@ -12,12 +12,15 @@
  */
 
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
 import type { FoodTimerSession, TrackedFoodItem } from '../../lib/food';
 import {
   buildFoodWarningNotification,
   cancelFoodWarningNotifications,
+  ensureFoodNotificationChannelAsync,
   ensureFoodNotificationPermission,
+  FOOD_NOTIFICATION_CHANNEL_ID,
   getFoodWarningScheduleTime,
   makeFoodWarningKey,
   readFoodDismissedWarnings,
@@ -92,6 +95,8 @@ describe('foodNotifications — scheduling + dedupe', () => {
     jest.clearAllMocks();
     storage.delete(STORAGE_KEYS.foodDismissedWarnings);
     storage.delete(STORAGE_KEYS.foodNotificationPrefs);
+    // Run as Android so the food channel is created (G4).
+    Object.defineProperty(Platform, 'OS', { configurable: true, get: () => 'android' });
     // Freeze "now" before the warning fire time so future scheduling occurs.
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-19T12:00:00.000Z'));
     (Notifications.scheduleNotificationAsync as jest.Mock).mockImplementation(async () =>
@@ -108,6 +113,29 @@ describe('foodNotifications — scheduling + dedupe', () => {
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
     const registry = readFoodDismissedWarnings();
     expect(Object.keys(registry)).toHaveLength(1);
+  });
+
+  it('creates the food Android channel before scheduling (G4)', async () => {
+    await scheduleFoodWarningNotifications(activeSession(), [item()]);
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith(
+      FOOD_NOTIFICATION_CHANNEL_ID,
+      expect.objectContaining({
+        name: 'Comida',
+        importance: Notifications.AndroidImportance.HIGH,
+      }),
+    );
+  });
+
+  it('passes channelId food on the trigger object (G4, Expo v56 DateTriggerInput)', async () => {
+    await scheduleFoodWarningNotifications(activeSession(), [item()]);
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        trigger: expect.objectContaining({
+          channelId: FOOD_NOTIFICATION_CHANNEL_ID,
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+        }),
+      }),
+    );
   });
 
   it('does not schedule for a disabled tracked food', async () => {
@@ -178,6 +206,51 @@ describe('foodNotifications — permission (point-of-use, D-11)', () => {
     });
     const status = await ensureFoodNotificationPermission();
     expect(status).toBe('denied');
+  });
+});
+
+describe('foodNotifications — Android channel (G4)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    Object.defineProperty(Platform, 'OS', { configurable: true, get: () => 'android' });
+  });
+
+  it('ensureFoodNotificationChannelAsync creates the food channel on Android', async () => {
+    await ensureFoodNotificationChannelAsync();
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith(
+      FOOD_NOTIFICATION_CHANNEL_ID,
+      expect.objectContaining({
+        name: 'Comida',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        showBadge: false,
+      }),
+    );
+  });
+
+  it('ensureFoodNotificationPermission creates the channel after permission is granted', async () => {
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      status: 'undetermined',
+    });
+    (Notifications.requestPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      status: 'granted',
+    });
+    await ensureFoodNotificationPermission();
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith(
+      FOOD_NOTIFICATION_CHANNEL_ID,
+      expect.objectContaining({ name: 'Comida' }),
+    );
+  });
+
+  it('ensureFoodNotificationPermission does NOT create the channel when denied', async () => {
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      status: 'undetermined',
+    });
+    (Notifications.requestPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      status: 'denied',
+    });
+    await ensureFoodNotificationPermission();
+    expect(Notifications.setNotificationChannelAsync).not.toHaveBeenCalled();
   });
 });
 

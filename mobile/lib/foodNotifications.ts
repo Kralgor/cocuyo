@@ -10,6 +10,7 @@
 //   T-04-04-03 consent — permission requested only via ensureFoodNotificationPermission().
 //   T-04-04-04 safety — copy is cautious, no safety/temperature guarantee.
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
 import type { FoodTimerSession, TrackedFoodItem } from './food';
 import { STORAGE_KEYS, storage } from './storage';
@@ -155,6 +156,32 @@ function registryKeyForItem(session: FoodTimerSession, item: TrackedFoodItem): s
   return makeFoodWarningKey(session.timerSessionId ?? '', item.id, 'warning');
 }
 
+// ── Android notification channel for food warnings ──────────────────────────────
+// Dedicated HIGH-importance channel so food spoilage warnings are time-sensitive
+// and audible, independent of the push-token 'outages' channel (which is gated
+// on Device.isDevice + EAS projectId and therefore unavailable here).
+
+/** Android channel id for all local food-spoilage warning notifications. */
+export const FOOD_NOTIFICATION_CHANNEL_ID = 'food';
+
+/**
+ * Create (or update) the Android notification channel used by food warnings.
+ * No-op on iOS. Safe to call more than once — setNotificationChannelAsync is
+ * idempotent. Never call at module load or render (D-11); call only from
+ * ensureFoodNotificationPermission() or scheduleFoodWarningNotifications().
+ */
+export async function ensureFoodNotificationChannelAsync(): Promise<void> {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+  await Notifications.setNotificationChannelAsync(FOOD_NOTIFICATION_CHANNEL_ID, {
+    name: 'Comida',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    showBadge: false,
+  });
+}
+
 // ── permission (point-of-use only, D-11) ────────────────────────────────────────
 
 export type FoodPermissionStatus = 'granted' | 'denied' | 'undetermined';
@@ -168,6 +195,7 @@ function normalizeStatus(status: string | undefined): FoodPermissionStatus {
 /**
  * Check current permission; request it only if not yet granted. Call this ONLY
  * from an explicit user action (enable food alerts / confirm outage review).
+ * On Android, also ensures the food notification channel exists after granting.
  */
 export async function ensureFoodNotificationPermission(): Promise<FoodPermissionStatus> {
   const existing = await Notifications.getPermissionsAsync();
@@ -175,6 +203,9 @@ export async function ensureFoodNotificationPermission(): Promise<FoodPermission
   if (status !== 'granted') {
     const requested = await Notifications.requestPermissionsAsync();
     status = normalizeStatus(requested.status);
+  }
+  if (status === 'granted') {
+    await ensureFoodNotificationChannelAsync();
   }
   return status;
 }
@@ -193,6 +224,10 @@ export async function scheduleFoodWarningNotifications(
   session: FoodTimerSession,
   items: TrackedFoodItem[],
 ): Promise<FoodDismissedWarnings> {
+  // Defensive channel creation: ensure the Android channel exists even if
+  // scheduleFoodWarningNotifications is called without a prior permission flow.
+  await ensureFoodNotificationChannelAsync();
+
   const registry = readFoodDismissedWarnings();
   if (session.status !== 'active' || !session.timerSessionId) {
     return registry;
@@ -214,9 +249,14 @@ export async function scheduleFoodWarningNotifications(
       continue;
     }
     const content = buildFoodWarningNotification(item, session);
+    // channelId goes on the trigger (not content) per Expo SDK v56 DateTriggerInput.
     const id = await Notifications.scheduleNotificationAsync({
       content: { title: content.title, body: content.body, data: content.data },
-      trigger: { type: 'date', date: fireAt } as Notifications.NotificationTriggerInput,
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: fireAt,
+        channelId: FOOD_NOTIFICATION_CHANNEL_ID,
+      },
     });
     registry[key] = id;
   }
