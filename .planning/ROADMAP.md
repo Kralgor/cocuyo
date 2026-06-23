@@ -87,11 +87,12 @@ Plans:
   2. User can add a custom food item with a name and spoilage threshold
   3. Food timers auto-start when an outage is detected in the user's zone (no manual action required)
   4. User receives a local notification when a tracked food item is approaching its spoilage limit
-**Plans**: 3 plans
+**Plans**: 4 plans
 Plans:
-- [ ] 05-01-PLAN.md — react-native-svg install + history fetch lib (fetchRegionHistory, useHistory) + types + Wave 0 tests
-- [ ] 05-02-PLAN.md — History tab UI: HistoryStrip + ForecastCurve SVG port, real history.tsx screen (replaces PlaceholderTab)
-- [ ] 05-03-PLAN.md — EAS submit profiles (eas.json), app.json metadata, production Android build + Play Console gate, iOS App Store gate
+- [x] 04-01-PLAN.md — Food domain model + presets + MMKV helpers
+- [x] 04-02-PLAN.md — Food timer lifecycle state layer + useFoodTimers
+- [x] 04-03-PLAN.md — Spanish-first Food tab UI
+- [x] 04-04-PLAN.md — Local food spoilage notifications (+ gate G4: dedicated Android 'food' channel)
 **UI hint**: yes
 
 ### Phase 5: Polish + Store Submission

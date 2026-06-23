@@ -21,19 +21,28 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-25)
 
 **Core value:** Venezuelans get instant push notifications when power goes out or comes back in their zone, and can check outage status even without internet.
-**Current focus:** Phase 04 — food-spoilage-timers
+**Current focus:** Phase 05 — polish + store submission (only remaining unbuilt phase)
 
 ## Current Position
 
-Phase: 04 (food-spoilage-timers) — COMPLETE (4/4 plans)
-Plan: 4 of 4 complete
-Status: 04-04 complete (local food spoilage notifications: foodNotifications.ts + useFoodNotifications hook, Food tab wired to point-of-use permission + scheduler, 185 tests pass, tsc clean). NOTF-03, FOOD-03, FOOD-04 complete.
-Last activity: 2026-06-19
+Phases 1–4 are CODE-COMPLETE. Phase 5 is unplanned/unbuilt.
 
-Progress: [██████████] 100% of Phase 4
+- Phase 1 Foundation — done
+- Phase 2 Reporting/Sharing/Quick Wins — done
+- Phase 3 Push Notifications — code-complete + verified (FCM V1 + EXPO_ACCESS_TOKEN provisioned, Android preview build started); 4 on-device UAT items pending (03-HUMAN-UAT.md)
+- Phase 4 Food Timers — code-complete; gate G4 (dedicated Android 'food' channel) CLOSED 2026-06-23 (190/190 jest, tsc clean); on-device gates G1–G3, G5 pending
+- Phase 5 Polish + Store Submission — NOT planned, NOT built
 
-Outstanding (non-blocking): on-device food notification validation (permission prompt timing, real local delivery, cancel-on-restore) — see 04-04-SUMMARY human prerequisites; on-device APK smoke test (async), iOS build (Apple Developer Program), deferred code-review items.
-Next: Phase 03 — Push Notifications (ready to plan).
+Last activity: 2026-06-23 (G4 fix)
+
+Progress: [████████░░] 4 of 5 phases code-complete
+
+Outstanding human-gated items (no model can do these):
+- Phase 3: physical-device push smoke test (4 UAT items)
+- Phase 4: on-device permission/delivery/cancel (G1–G3), iOS delivery + Apple Developer Program (G5)
+- Phase 5: EAS Submit needs Google Play ($25) + Apple Developer ($99/yr) accounts + store listings
+
+Next (buildable): Plan Phase 05 — outage history + return-time estimate are code; store submission is human-gated.
 
 ## Performance Metrics
 
@@ -101,6 +110,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-06-19T19:35:31.037Z
-Stopped at: context exhaustion at 75% (2026-06-19)
+Last session: 2026-06-23
+Stopped at: Session resumed — Phase 4 code-complete, awaiting direction (on-device gates / merge / plan Phase 3)
 Resume file: None
