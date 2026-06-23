@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + Offline Core** - Expo scaffold, MMKV status cache, trust onboarding, privacy strings
 - [x] **Phase 2: Reporting + Sharing + Quick Wins** - GPS report flow, offline queue, WhatsApp sharing, emergency contacts, AMOLED, low-battery mode (completed 2026-06-12)
-- [ ] **Phase 3: Push Notifications** - Expo push infrastructure, push_tokens table, notify.py pipeline module, NotificationHandler
+- [x] **Phase 3: Push Notifications** - Expo push infrastructure, push_tokens table, notify.py pipeline module, NotificationHandler (code-complete 2026-06-13, 6/6 plans; device UAT pending)
 - [x] **Phase 4: Food Spoilage Timers** - Pre-built Venezuelan food list, custom items, local notifications, outage auto-start (completed 2026-06-19, 4/4 plans)
 - [ ] **Phase 5: Polish + Store Submission** - Outage history, return time estimate, EAS Submit to Google Play and App Store
 
@@ -87,7 +87,11 @@ Plans:
   2. User can add a custom food item with a name and spoilage threshold
   3. Food timers auto-start when an outage is detected in the user's zone (no manual action required)
   4. User receives a local notification when a tracked food item is approaching its spoilage limit
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — react-native-svg install + history fetch lib (fetchRegionHistory, useHistory) + types + Wave 0 tests
+- [ ] 05-02-PLAN.md — History tab UI: HistoryStrip + ForecastCurve SVG port, real history.tsx screen (replaces PlaceholderTab)
+- [ ] 05-03-PLAN.md — EAS submit profiles (eas.json), app.json metadata, production Android build + Play Console gate, iOS App Store gate
 **UI hint**: yes
 
 ### Phase 5: Polish + Store Submission
@@ -98,7 +102,11 @@ Plans:
   1. User can view outage history for their zone and see an estimated return time based on past patterns
   2. The app is live on Google Play Store and downloadable on Android devices
   3. The app is live on Apple App Store and downloadable on iOS devices
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — react-native-svg install + history fetch lib (fetchRegionHistory, useHistory) + types + Wave 0 tests
+- [ ] 05-02-PLAN.md — History tab UI: HistoryStrip + ForecastCurve SVG port, real history.tsx screen (replaces PlaceholderTab)
+- [ ] 05-03-PLAN.md — EAS submit profiles (eas.json), app.json metadata, production Android build + Play Console gate, iOS App Store gate
 **UI hint**: yes
 
 ## Progress
@@ -108,12 +116,12 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Offline Core | 5/6 | In Progress|  |
-| 2. Reporting + Sharing + Quick Wins | 7/7 | Complete   | 2026-06-12 |
-| 3. Push Notifications | 0/TBD | Not started | - |
-| 4. Food Spoilage Timers | 3/4 | In Progress|  |
+| 1. Foundation + Offline Core | 6/6 | Complete | 2026-06-10 |
+| 2. Reporting + Sharing + Quick Wins | 7/7 | Complete | 2026-06-12 |
+| 3. Push Notifications | 6/6 | Code-complete (device UAT pending) | 2026-06-13 |
+| 4. Food Spoilage Timers | 4/4 | Code-complete (device UAT pending) | 2026-06-19 |
 | 5. Polish + Store Submission | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-05-25*
-*Last updated: 2026-06-11 after Phase 2 planning — 7 plans created*
+*Last updated: 2026-06-23 — corrected stale status table; Phases 1–4 code-complete, Phase 4 gate G4 closed*
