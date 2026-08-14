@@ -264,20 +264,28 @@ def score_region(
 
 def _compute_municipio_satellite(
     now: datetime,
+    supabase_client=None,
     fetch_fn=None,
-) -> dict[tuple[str, str], float]:
+    baselines: dict[str, float] | None = None,
+    save_baselines_fn=None,
+) -> dict[tuple[str, str], dict]:
     """
     VIIRS radiance sampled at every municipio's OWN centroid (publication
-    window only). Returns {(state, municipio_name): satellite_score}.
+    window only). Returns {(state, municipio_name): {"status", "score",
+    "ratio"}}.
 
-    Ratio vs the state's region baseline (the state's grid baseline is the
-    best proxy available per municipio); states without a region have no
-    baseline and contribute no satellite signal (honest no_data).
+    Each municipio's ratio is computed against its OWN adaptive baseline
+    (EMA of its own radiance history, persisted to R2 via
+    pipeline/municipio_baselines) — never against the state city's baseline.
+    States without a region baseline-free run still sample their municipios
+    because baselines are per-municipio and self-seeding.
     """
     from pipeline.collector_viirs import (
-        BASELINE_RADIANCE,
         classify_ratio,
         fetch_municipio_radiance as _default_fetch,
+    )
+    from pipeline.municipio_baselines import (
+        update_baselines,
     )
     from pipeline.municipio_status import region_for_state
     from pipeline.municipios import MUNICIPIOS, STATE_ORDER
@@ -287,9 +295,6 @@ def _compute_municipio_satellite(
     points: list[tuple[float, float]] = []
     point_to_key: dict[tuple[float, float], tuple[str, str]] = {}
     for state in STATE_ORDER:
-        baseline = BASELINE_RADIANCE.get(region_for_state(state) or "")
-        if baseline is None:
-            continue  # no reference baseline — no satellite signal for this state
         for m in MUNICIPIOS.get(state, []):
             pt = (m["lat"], m["lon"])
             points.append(pt)
@@ -297,26 +302,48 @@ def _compute_municipio_satellite(
 
     radiance = fetch(points, now=now)
 
-    out: dict[tuple[str, str], float] = {}
-    for pt, key in point_to_key.items():
+    if not radiance:
+        return {}
+
+    # EMA-update per-municipio baselines with this night's observations
+    obs_by_key: dict[str, float] = {
+        f"{state}|{name}": radiance[pt]
+        for pt, (state, name) in point_to_key.items()
+        if pt in radiance
+    }
+    if baselines is None:
+        baselines = {}
+    updated = update_baselines(baselines, obs_by_key)
+    if save_baselines_fn is not None:
+        save_baselines_fn(updated)
+
+    # classify each municipio against its own baseline
+    out: dict[tuple[str, str], dict] = {}
+    for pt, (state, name) in point_to_key.items():
         observed = radiance.get(pt)
         if observed is None:
             continue  # cloud-heavy or no granule — absent != zero (ADR-009)
-        state, _ = key
-        baseline = BASELINE_RADIANCE.get(region_for_state(state) or "")
+        baseline = updated.get(f"{state}|{name}")
         if baseline is None or baseline <= 0:
             continue
         ratio = observed / baseline
         status = classify_ratio(ratio)
-        out[key] = _STATUS_TO_SCORE_MUNICIPIO[status]
+        out[(state, name)] = {
+            "status": status,
+            "score": _SATELLITE_STATUS_SCORE[status],
+            "ratio": round(ratio, 3),
+            "observed": round(observed, 2),
+        }
 
-    logger.info("municipio VIIRS: %d/%d municipios with own satellite sample",
-                len(out), sum(len(MUNICIPIOS.get(s, [])) for s in STATE_ORDER))
+    logger.info(
+        "municipio VIIRS: %d/%d municipios with own satellite sample",
+        len(out), sum(len(MUNICIPIOS.get(s, [])) for s in STATE_ORDER),
+    )
     return out
 
 
-# ratio status -> score, matching collector_viirs._STATUS_TO_SCORE
-_STATUS_TO_SCORE_MUNICIPIO = {
+# ratio status -> satellite score (same mapping as collector_viirs)
+_SATELLITE_STATUS_SCORE = {
     "major_outage": 0.90,
     "partial_outage": 0.60,
     "degraded": 0.40,
@@ -414,15 +441,20 @@ def run(now: datetime | None = None) -> dict:
             logger.warning("notify fan-out failed (non-fatal): %s", exc)
 
     # Municipio layer — each municipio gets its own status entry (Phase 2+).
-    # Satellite is sampled at the municipio's own centroid; internet/weather/
-    # crowd are attributed from the state's region. Failures never break the
-    # main cycle — the region layer keeps the core service alive.
+    # Satellite is sampled at the municipio's own centroid against its own
+    # adaptive baseline; internet/weather/crowd fill in only when satellite
+    # is absent. Failures never break the main cycle.
     municipios_section: dict = {}
     if phase >= 2:
         try:
+            from pipeline.municipio_baselines import load_baselines, save_baselines
             from pipeline.municipio_status import build_municipios_payload
 
-            satellite_by_municipio = _compute_municipio_satellite(now)
+            satellite_by_municipio = _compute_municipio_satellite(
+                now,
+                baselines=load_baselines(),
+                save_baselines_fn=save_baselines,
+            )
             municipios_section = build_municipios_payload(
                 region_output, satellite_by_municipio
             )
