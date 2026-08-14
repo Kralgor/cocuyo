@@ -72,7 +72,7 @@ export default function ReportButton() {
   const [displayName, setDisplayName] = useState<string>('');
   const [cityFreetext, setCityFreetext] = useState('');
   const [gps, setGps]                 = useState<Gps | null>(null);
-  const [status, setStatus]           = useState<string | null>(null);
+  const [, setStatus]               = useState<string | null>(null);
   const [recentCount, setRecentCount] = useState<number | null>(null);
   const [errorMsg, setErrorMsg]       = useState<string | null>(null);
   const [shortcut, setShortcut]       = useState<LastReport | null>(null);

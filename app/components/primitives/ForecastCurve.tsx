@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function ForecastCurve({
-  theme: t, data, width = 320, height = 96, lang = 'es', accentColor,
+  theme: t, data, width = 320, height = 96, accentColor,
 }: Props) {
   const N    = data.length;
   const ax   = accentColor ?? t.accent;
