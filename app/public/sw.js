@@ -7,8 +7,8 @@
 // Offline: stale status.json served from cache.
 // Frontend detects offline state and shows the "Offline" banner (api.ts).
 
-const SHELL = 'cocuyo-shell-v1';
-const DATA  = 'cocuyo-data-v1';
+const SHELL = 'cocuyo-shell-v2';
+const DATA  = 'cocuyo-data-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
