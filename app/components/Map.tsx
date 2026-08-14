@@ -149,7 +149,7 @@ export default function Map({
         minZoom={5}
         maxZoom={12}
         style={{ height: '100%', width: '100%', background: t.bg }}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         zoomControl={true}
       >
         <TileLayerUpdater url={t.tileUrl} attribution={t.tileAttr} />
@@ -212,8 +212,10 @@ export default function Map({
         })
       )}
 
-      {/* region-city markers — the app's selectable data model */}
-      {Object.entries(regions).map(([key, data]) => {
+      {/* region-city markers — fallback only, when municipio data is absent.
+          With municipios present the map is clean: circles at low zoom,
+          municipio dots at high zoom — never both at once. */}
+      {!municipios && Object.entries(regions).map(([key, data]) => {
         const coords = REGION_COORDS[key];
         if (!coords) return null;
         const color  = statusColor(data.status, t);
