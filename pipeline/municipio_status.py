@@ -56,6 +56,14 @@ OUTAGE_STATUSES = {
     "partial_outage",
 }
 
+# VIIRS ratio classification -> app status vocabulary (v2 satellite-dominant)
+_SATELLITE_TO_STATUS: dict[str, str] = {
+    "major_outage":   "confirmed_outage",
+    "partial_outage": "likely_outage",
+    "degraded":       "at_risk",
+    "normal":         "normal",
+}
+
 
 def region_for_state(state: str) -> Optional[str]:
     """Region key covering a state, or None when the state has no region."""
@@ -88,47 +96,50 @@ def aggregate_state_status(municipio_entries: list[dict]) -> str:
 def derive_municipio_entry(
     municipio: Municipio,
     region_entry: Optional[dict],
-    satellite_score: Optional[float],
+    satellite: Optional[dict],
 ) -> dict:
     """
-    Build one municipio's status entry from its own satellite sample and
-    the state's attributed region signals. Pure logic — no network.
+    Build one municipio's status entry from its own satellite observation
+    and the state's attributed region signals. Pure logic — no network.
 
-    Status rule (v1, documented approximation):
-      - When the municipio's OWN VIIRS sample shows lights out (score
-        >= 0.60, i.e. radiance ratio classified partial/major outage),
-        that observation dominates: the municipio reads likely/confirmed
-        outage even when the state's regional signals are quiet. The
-        satellite is the only signal observed at municipio resolution;
-        the region model's averaging would dilute it to "normal".
-      - Otherwise the weighted signal blend (scorer) decides.
+    Status rule (v2 — satellite-dominant, per-municipio independent):
+      - When the municipio's OWN VIIRS sample exists (satellite passed),
+        its status comes from THAT observation: major_outage ->
+        confirmed_outage, partial_outage -> likely_outage, degraded ->
+        at_risk, normal -> normal. The municipio's lights ARE its status.
+      - When the own satellite is absent (clouds, outside the publication
+        window), region signals fill in via the weighted blend — and only
+        then does the municipio track its state.
     """
     signals = {
         "internet":    (region_entry or {}).get("signals", {}).get("internet") if region_entry else None,
-        "satellite":   satellite_score,
+        "satellite":   (satellite or {}).get("score"),
         "crowdsource": (region_entry or {}).get("signals", {}).get("crowdsource") if region_entry else None,
         "weather":     (region_entry or {}).get("signals", {}).get("weather") if region_entry else None,
     }
 
-    scored = compute_region_score(
-        crowd_score=signals["crowdsource"],
-        internet_score=signals["internet"],
-        satellite_score=signals["satellite"],
-        weather_score=signals["weather"],
-    )
-
-    status = scored.status
-    if satellite_score is not None:
-        if satellite_score >= 0.85:
-            status = "confirmed_outage"
-        elif satellite_score >= 0.60:
-            status = "likely_outage"
+    if satellite and satellite.get("status"):
+        # own observation decides — per-municipio independent
+        status = _SATELLITE_TO_STATUS.get(
+            satellite["status"],
+            (region_entry or {}).get("status", "no_data"),
+        )
+        current_score = satellite.get("score", 0.0)
+    else:
+        scored = compute_region_score(
+            crowd_score=signals["crowdsource"],
+            internet_score=signals["internet"],
+            satellite_score=signals["satellite"],
+            weather_score=signals["weather"],
+        )
+        status = scored.status
+        current_score = scored.current_score
 
     entry: dict = {
         "name": municipio["name"],
         "lat":  municipio["lat"],
         "lon":  municipio["lon"],
-        "current_score": round(scored.current_score, 4),
+        "current_score": round(current_score, 4),
         "status": status,
         "signals": {
             "internet":    _r(signals["internet"]),
@@ -142,15 +153,15 @@ def derive_municipio_entry(
 
 def build_municipios_payload(
     regions: dict[str, dict],
-    satellite_by_municipio: Optional[dict[tuple[str, str], Optional[float]]] = None,
+    satellite_by_municipio: Optional[dict[tuple[str, str], Optional[dict]]] = None,
 ) -> dict:
     """
     Build the full "municipios" section from the per-region status payload.
 
     regions: the "regions" section of status.json (region key -> entry).
-    satellite_by_municipio: optional {(state, muni_name): score} from the
-      VIIRS sampler; missing entries fall back to the state region's own
-      satellite score when present, else None.
+    satellite_by_municipio: optional {(state, muni_name): {"status", "score",
+      "ratio"}} from the VIIRS sampler. Missing municipios fall back to the
+      state region's own satellite entry when present, else no satellite.
     """
     payload: dict[str, list[dict]] = {}
     for state in STATE_ORDER:
@@ -162,8 +173,12 @@ def build_municipios_payload(
             if satellite_by_municipio is not None:
                 own = satellite_by_municipio.get((state, m["name"]))
             if own is None and region_entry is not None:
-                own = region_entry.get("signals", {}).get("satellite")
-            state_entries.append(derive_municipio_entry(m, region_entry, own))
+                sat = region_entry.get("signals", {}).get("satellite")
+                if sat is not None:
+                    own = {"status": "normal", "score": sat}
+            entry = derive_municipio_entry(m, region_entry, own)
+            entry["state"] = state
+            state_entries.append(entry)
         payload[state] = state_entries
     return payload
 
