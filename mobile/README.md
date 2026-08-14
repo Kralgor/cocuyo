@@ -1,56 +1,60 @@
-# Welcome to your Expo app 👋
+# Cocuyo Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native (Expo SDK 56) app for [Cocuyo](https://github.com/Kralgor/cocuyo) — Venezuela's power outage monitoring system. Reads the same `status.json` from CDN and submits reports to the same Supabase backend as the web app, plus push notifications, food spoilage timers, full offline mode, and WhatsApp sharing.
 
-## Get started
+Anonymous. Open source. No government affiliation.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- **Live outage status** per zone, with staleness indicator when offline (STAT-01/02/03)
+- **Outage history + return-time estimates** — 30-day strip chart, 48h risk forecast, detected patterns (STAT-04)
+- **Report submission** — GPS auto-detect with manual zone fallback, offline queue with auto-sync (REPT-01/02/03)
+- **Push notifications** — power out, power restored, neighboring-zone warnings (NOTF-01/02/04, code-complete)
+- **Food spoilage timers** — pre-built Venezuelan food list + custom items, auto-start on outage, local alerts (FOOD-01..04)
+- **WhatsApp sharing** — one-tap pre-formatted Spanish status text (SHAR-01)
+- **Battery optimizations** — AMOLED true-black theme, reduced refresh below 20% battery (BATT-01/02)
+- **Emergency contacts** per zone (BATT-03)
+- **Trust onboarding** + persistent privacy/open-source section (TRST-01/02)
 
-2. Start the app
+## Stack
 
-   ```bash
-   npx expo start
-   ```
+- Expo SDK 56 + Expo Router (file-based routing)
+- React Query 5 + MMKV sync persister (offline-first cache, stale-while-revalidate)
+- expo-notifications (local food timers + Expo Push relay)
+- react-native-svg (history/forecast charts)
+- jest-expo (~206 tests)
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Development
 
 ```bash
-npm run reset-project
+npm install
+npx expo start          # Expo Go / emulator / dev build
+npm test                # jest-expo suite
+npx tsc --noEmit
+npx expo lint
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Configuration
 
-### Other setup steps
+Runtime config lives in `app.json` `extra`:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Key | Purpose |
+|-----|---------|
+| `statusCdnUrl` | status.json CDN URL (fallback: `https://cocuyo.kralgor.com/status.json`) |
+| `historyCdnUrl` | history JSON base (fallback: `https://cocuyo.kralgor.com/history`) |
+| `supabaseUrl` / `supabaseAnonKey` | report submission + push token registration (anon key only — ADR-007, never the service_role key) |
 
-## Learn more
+## Builds & store submission
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+eas build --platform android --profile production
+eas build --platform ios     --profile production   # requires Apple Developer Program
+eas submit --platform android --profile production  # after first manual Play Console upload
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+`eas.json` has `submit.production` profiles for both stores. Store submission is pending the Google Play ($25) and Apple Developer ($99/yr) accounts — the human gate checklist is in `.planning/phases/05-polish-store-submission/05-03-PLAN.md`.
 
-## Join the community
+## Testing notes
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `babel.config.js` uses `babel-preset-expo` without the jest preset — `jest.mock` calls are **not hoisted**, so mocks (e.g. `expo-constants`) must be declared before the module under test loads, and mock factories need `__esModule: true`.
+- React 19's react-test-renderer requires `act()` around `create()`, and renderer instances must be retained in a variable.
