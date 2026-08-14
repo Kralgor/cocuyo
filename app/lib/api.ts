@@ -62,6 +62,23 @@ export interface StatusJson {
   next_update_approx:  string;
   collector_errors:    number;
   regions:             Record<string, RegionEntry>;
+  municipios?:         Record<string, MunicipioEntry[]>;
+}
+
+// ── municipio layer (Phase 2+ pipeline output) ────────────────────────────────
+// Each municipio carries its own satellite sample + attributed region signals.
+export interface MunicipioEntry {
+  name:          string;
+  lat:           number;
+  lon:           number;
+  current_score: number;
+  status:        string;
+  signals: {
+    internet:    number | null;
+    satellite:   number | null;
+    crowdsource: number | null;
+    weather:     number | null;
+  };
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────

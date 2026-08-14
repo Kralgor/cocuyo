@@ -80,6 +80,11 @@ _FILL_VALUE   = 65535
 # Region bounding box half-width in degrees (~15 km at VE latitudes).
 _REGION_HALF_DEG = 0.15
 
+# Municipio sampling window: ~0.05° ≈ 5.5 km around the seat/centroid.
+# Narrower than the region bbox — captures the urban core where the
+# outage signal is strongest without bleeding into neighbor municipios.
+_MUNICIPIO_HALF_DEG = 0.05
+
 
 def classify_ratio(ratio: float) -> str:
     """Map observed/baseline radiance ratio to status string."""
@@ -291,6 +296,151 @@ def _fetch_granule_list(
         return []
 
 
+def _matching_granule(granules: list[dict], tile_id: str) -> Optional[dict]:
+    """Return the granule covering a tile id, or None."""
+    for g in granules:
+        title = g.get("title", "") or ""
+        links = g.get("links", []) or []
+        link_urls = " ".join(lnk.get("href", "") for lnk in links)
+        if tile_id in title or tile_id in link_urls:
+            return g
+    return None
+
+
+def _granule_download_url(granule: dict) -> Optional[str]:
+    """Extract the data download URL from a granule, preferring data rel links."""
+    for lnk in granule.get("links", []):
+        if lnk.get("rel") in ("http://esipfed.org/ns/fedsearch/1.1/data#", "data"):
+            return lnk.get("href")
+    if granule.get("links"):
+        return granule["links"][0].get("href")
+    return None
+
+
+def _download_tile_arrays(
+    granules: list[dict],
+    tile_id: str,
+) -> Optional[tuple[int, int, np.ndarray, np.ndarray]]:
+    """
+    Download + read the HDF5 arrays for one tile (single download per tile).
+
+    Returns (tile_h, tile_v, ntl, qf) or None on any failure.
+    """
+    granule = _matching_granule(granules, tile_id)
+    if granule is None:
+        return None
+    download_url = _granule_download_url(granule)
+    if not download_url:
+        return None
+    try:
+        tile_h = int(tile_id[1:3])
+        tile_v = int(tile_id[4:6])
+    except (TypeError, ValueError, IndexError):
+        return None
+
+    import requests as _req  # noqa: PLC0415
+    session = _req.Session()
+    tmp_path: Optional[str] = None
+    try:
+        tmp_path = _download_granule(download_url, session)
+        if tmp_path is None:
+            return None
+        arrays = _read_granule_radiance(tmp_path)
+        if arrays is None:
+            return None
+        ntl, qf = arrays
+        return tile_h, tile_v, ntl, qf
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+def sample_radiance_at(
+    ntl: np.ndarray,
+    qf: np.ndarray,
+    tile_h: int,
+    tile_v: int,
+    lat: float,
+    lon: float,
+    half_deg: float = _MUNICIPIO_HALF_DEG,
+) -> Optional[float]:
+    """
+    Mean radiance in a ±half_deg window around an arbitrary lat/lon point
+    within the given tile's arrays. Returns None when cloud-heavy.
+    """
+    lat_min, lat_max = lat - half_deg, lat + half_deg
+    lon_min, lon_max = lon - half_deg, lon + half_deg
+
+    corners = [
+        (lat_min, lon_min), (lat_min, lon_max),
+        (lat_max, lon_min), (lat_max, lon_max),
+    ]
+    pixel_coords = [
+        lonlat_to_tile_pixel(c_lat, c_lon, tile_h, tile_v)
+        for c_lat, c_lon in corners
+    ]
+    valid = [p for p in pixel_coords if p is not None]
+    if not valid:
+        return None
+    rows = [p[0] for p in valid]
+    cols = [p[1] for p in valid]
+    row_range = list(range(min(rows), max(rows) + 1))
+    col_range = list(range(min(cols), max(cols) + 1))
+    return mean_region_radiance(ntl, qf, row_range, col_range)
+
+
+def fetch_municipio_radiance(
+    points: list[tuple[float, float]],
+    date_str: str | None = None,
+    now: datetime | None = None,
+) -> dict[tuple[float, float], float]:
+    """
+    Per-point mean radiance for arbitrary lat/lon coordinates.
+
+    Downloads each distinct VIIRS tile ONCE, then samples every point in
+    that tile — 332 municipios cost ~6 downloads, not 332.
+
+    Honors the publication-window guard like fetch_latest_viirs.
+    Returns {(lat, lon): radiance}; points that fall in tiles without
+    granules or under clouds are absent (absent != zero, ADR-009).
+    """
+    if now is None:
+        now = datetime.now(timezone.utc)
+    if not in_publication_window(now):
+        logger.info("VIIRS municipio: outside publication window — skipping")
+        return {}
+
+    if date_str is None:
+        date_str = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    session = requests.Session()
+    granules = _fetch_granule_list(date_str, session)
+    if not granules:
+        logger.warning("VIIRS municipio: no granules for %s", date_str)
+        return {}
+
+    # group points by tile id
+    by_tile: dict[str, list[tuple[float, float]]] = {}
+    for lat, lon in points:
+        tile_ids = which_tiles(lat, lon)
+        if not tile_ids:
+            continue
+        by_tile.setdefault(tile_ids[0], []).append((lat, lon))
+
+    out: dict[tuple[float, float], float] = {}
+    for tile_id, pts in by_tile.items():
+        loaded = _download_tile_arrays(granules, tile_id)
+        if loaded is None:
+            logger.debug("VIIRS municipio: tile %s unavailable", tile_id)
+            continue
+        tile_h, tile_v, ntl, qf = loaded
+        for lat, lon in pts:
+            radiance = sample_radiance_at(ntl, qf, tile_h, tile_v, lat, lon)
+            if radiance is not None:
+                out[(round(lat, 5), round(lon, 5))] = round(radiance, 2)
+    return out
+
+
 def _extract_region_radiance(
     granules: list[dict],
     region: str,
@@ -315,90 +465,21 @@ def _extract_region_radiance(
     lon = region_meta["lon"]
 
     tile_ids = which_tiles(lat, lon)
+    if not tile_ids:
+        return None
+    tile_id = tile_ids[0]
 
-    # Find a granule that covers any of the required tiles.
-    # Granule title or URL typically contains the tile id e.g. "h11v07".
-    matching_granule: Optional[dict] = None
-    matched_tile: Optional[str] = None
-    for tile_id in tile_ids:
-        for g in granules:
-            title = g.get("title", "") or ""
-            links = g.get("links", []) or []
-            link_urls = " ".join(lnk.get("href", "") for lnk in links)
-            if tile_id in title or tile_id in link_urls:
-                matching_granule = g
-                matched_tile = tile_id
-                break
-        if matching_granule:
-            break
-
-    if matching_granule is None:
-        logger.debug("VIIRS: no granule for region %s (tiles %s)", region, tile_ids)
+    # Find a granule that covers the region's tile.
+    if _matching_granule(granules, tile_id) is None:
+        logger.debug("VIIRS: no granule for region %s (tile %s)", region, tile_id)
         return None
 
-    # Find download URL — prefer "data" rel links, fall back to first href.
-    download_url: Optional[str] = None
-    for lnk in matching_granule.get("links", []):
-        if lnk.get("rel") in ("http://esipfed.org/ns/fedsearch/1.1/data#", "data"):
-            download_url = lnk.get("href")
-            break
-    if not download_url and matching_granule.get("links"):
-        download_url = matching_granule["links"][0].get("href")
-
-    if not download_url:
-        logger.warning("VIIRS: no download URL for region %s granule", region)
+    # Download once and sample the region bbox window.
+    loaded = _download_tile_arrays(granules, tile_id)
+    if loaded is None:
         return None
-
-    # Derive tile H/V from matched_tile string e.g. "h11v07"
-    try:
-        tile_h = int(matched_tile[1:3])
-        tile_v = int(matched_tile[4:6])
-    except (TypeError, ValueError, IndexError):
-        logger.warning("VIIRS: cannot parse tile id %s", matched_tile)
-        return None
-
-    # Build pixel window for region bbox
-    lat_min = lat - _REGION_HALF_DEG
-    lat_max = lat + _REGION_HALF_DEG
-    lon_min = lon - _REGION_HALF_DEG
-    lon_max = lon + _REGION_HALF_DEG
-
-    corners = [
-        (lat_min, lon_min),
-        (lat_min, lon_max),
-        (lat_max, lon_min),
-        (lat_max, lon_max),
-    ]
-    pixel_coords = [
-        lonlat_to_tile_pixel(c_lat, c_lon, tile_h, tile_v)
-        for c_lat, c_lon in corners
-    ]
-    valid_pixels = [p for p in pixel_coords if p is not None]
-    if not valid_pixels:
-        logger.debug("VIIRS: region %s bbox outside tile %s", region, matched_tile)
-        return None
-
-    rows = [p[0] for p in valid_pixels]
-    cols = [p[1] for p in valid_pixels]
-    row_range = list(range(min(rows), max(rows) + 1))
-    col_range = list(range(min(cols), max(cols) + 1))
-
-    # Download and read granule
-    import requests as _req  # noqa: PLC0415
-    session = _req.Session()
-    tmp_path: Optional[str] = None
-    try:
-        tmp_path = _download_granule(download_url, session)
-        if tmp_path is None:
-            return None
-        arrays = _read_granule_radiance(tmp_path)
-        if arrays is None:
-            return None
-        ntl, qf = arrays
-        return mean_region_radiance(ntl, qf, row_range, col_range)
-    finally:
-        if tmp_path and os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+    tile_h, tile_v, ntl, qf = loaded
+    return sample_radiance_at(ntl, qf, tile_h, tile_v, lat, lon, half_deg=_REGION_HALF_DEG)
 
 
 def fetch_latest_viirs(
