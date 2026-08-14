@@ -17,6 +17,7 @@ models/*.pkl
 node_modules/
 .next/
 /out/
+*.tsbuildinfo
 
 # OS
 .DS_Store

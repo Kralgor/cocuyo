@@ -1,0 +1,307 @@
+# Codebase Structure
+
+**Analysis Date:** 2026-05-24
+
+## Directory Layout
+
+```
+cocuyo/
+├── pipeline/               # Python backend — all pipeline logic
+│   ├── __init__.py
+│   ├── main.py             # Pipeline entry point and orchestrator
+│   ├── regions.py          # Single source of truth for 17 regions
+│   ├── validation.py       # Crowd report validation + rate limiting
+│   ├── quorum.py           # Quorum check for crowd signal validity
+│   ├── scorer.py           # Weighted signal blending → outage score
+│   ├── cross_validation.py # Crowd vs passive signal reconciliation
+│   ├── outage_lifecycle.py # Supabase outage event management
+│   ├── collector_internet_unified.py  # IODA + Cloudflare Radar
+│   ├── collector_internet.py          # IODA BGP signals
+│   ├── collector_cloudflare.py        # Cloudflare Radar traffic
+│   ├── collector_viirs.py             # NASA LANCE VIIRS satellite
+│   ├── collector_weather.py           # NASA POWER grid stress
+│   ├── bajon_detector.py   # Voltage instability (bajones) detection
+│   ├── duration_estimator.py # Outage duration survival analysis
+│   ├── restoration_tracker.py # Power-back detection
+│   ├── calibration.py      # Weekly active-user estimation
+│   ├── outage_type_classifier.py  # Phase 3 outage type ML
+│   ├── zone_mapper.py      # Phase 3 sub-zone detection
+│   ├── water_predictor.py  # Water supply correlation
+│   ├── train_duration_model.py  # Weekly model retraining entry point
+│   ├── backfill_history.py # Historical data backfill utility
+│   └── seed_history.py     # Seed historical region data
+│
+├── app/                    # Next.js 14 static frontend
+│   ├── pages/
+│   │   ├── index.tsx       # Single page — root of the app
+│   │   ├── _app.tsx        # AppProvider wrapper
+│   │   └── _document.tsx   # HTML document shell
+│   ├── components/
+│   │   ├── Map.tsx         # Leaflet map (lazy-loaded)
+│   │   ├── mobile/         # Mobile-first screen components
+│   │   │   ├── MobileShell.tsx     # App shell with header + tab bar
+│   │   │   ├── TabBar.tsx          # Bottom nav (zone/map/forecast/bajones/history)
+│   │   │   ├── RegionPicker.tsx    # Region selection overlay
+│   │   │   ├── Settings.tsx        # Settings panel
+│   │   │   ├── ScreenZoneDetail.tsx # Zone status screen
+│   │   │   ├── ScreenForecast.tsx  # Forecast screen
+│   │   │   ├── ScreenBajones.tsx   # Bajones (voltage) screen
+│   │   │   ├── ScreenHistory.tsx   # History screen
+│   │   │   ├── ReportButtons.tsx   # Report no_power/power_back/unstable
+│   │   │   ├── PowerBackBanner.tsx # Recovery notification banner
+│   │   │   └── TabIcon.tsx         # Tab icon component
+│   │   └── primitives/     # Reusable visual primitives
+│   │       ├── Chip.tsx
+│   │       ├── CrossServiceRow.tsx
+│   │       ├── Fingerprint.tsx
+│   │       ├── FireflyDot.tsx
+│   │       ├── ForecastCurve.tsx
+│   │       ├── FrequencyTrace.tsx
+│   │       ├── HistoryStrip.tsx
+│   │       ├── MiniStat.tsx
+│   │       ├── SectionLabel.tsx
+│   │       └── SignalBar.tsx
+│   ├── contexts/
+│   │   └── AppContext.tsx   # Theme, language, region preference
+│   ├── lib/
+│   │   ├── api.ts           # fetchStatus, submitReport, useAutoRefresh
+│   │   ├── history.ts       # fetchRegionHistory, useRegionHistory
+│   │   ├── theme.ts         # Theme definitions (tinta/estudio)
+│   │   ├── i18n.ts          # Spanish/English string lookup
+│   │   └── demoData.ts      # Demo/mock data for offline testing
+│   ├── styles/
+│   │   └── globals.css      # Global CSS, CSS variables
+│   ├── public/
+│   │   ├── status.json      # Local fallback status.json for dev
+│   │   ├── history/         # Per-region history JSON files (static)
+│   │   ├── manifest.json    # PWA manifest
+│   │   ├── sw.js            # Service worker
+│   │   ├── icon-192.png
+│   │   └── icon-512.png
+│   ├── out/                 # Next.js static export output (gitignored for dev, deployed)
+│   ├── next.config.js       # output: 'export', trailingSlash: true
+│   ├── tsconfig.json        # TypeScript strict mode
+│   └── package.json
+│
+├── tests/                  # Python test suite
+│   ├── __init__.py
+│   ├── test_validation.py
+│   ├── test_quorum.py
+│   ├── test_scorer.py
+│   ├── test_cross_validation.py
+│   ├── test_collector_cloudflare.py
+│   ├── test_collector_internet.py
+│   ├── test_collector_viirs.py
+│   ├── test_collector_weather.py
+│   ├── test_bajon_detector.py
+│   ├── test_calibration.py
+│   ├── test_duration_estimator.py
+│   ├── test_outage_lifecycle.py
+│   ├── test_outage_classifier.py
+│   ├── test_outage_classifier_full.py
+│   ├── test_restoration_tracker.py
+│   ├── test_train_duration_model.py
+│   ├── test_water_predictor.py
+│   ├── test_zone_mapper.py
+│   ├── test_main_phase2.py
+│   ├── test_pipeline_integration.py
+│   └── test_unified.py
+│
+├── models/                 # Serialized ML models (joblib/pickle)
+│   └── (duration_model.pkl, duration_features.pkl — generated by retraining)
+│
+├── docs/                   # Architecture, spec, ADRs
+│   ├── ARCHITECTURE.md
+│   ├── SPEC.md             # Full project specification
+│   ├── TASKS.md            # Phase/task tracking
+│   ├── schema.sql          # Supabase database schema
+│   ├── adr/                # Architecture Decision Records
+│   │   ├── 001-static-json-cdn.md
+│   │   ├── 002-python-collectors-stateless.md
+│   │   ├── 003-internet-signal-is-national.md
+│   │   ├── 004-phase1-data-collection-mode.md
+│   │   ├── 005-device-fingerprint-deferred.md
+│   │   ├── 006-region-assignment-user-selected.md
+│   │   ├── 007-supabase-rls-two-key-model.md
+│   │   ├── 008-github-actions-phase1-only.md
+│   │   └── 009-normalize-by-available-signals.md
+│   └── agents/             # Agent/handoff documentation
+│
+├── .github/
+│   └── workflows/
+│       └── collect.yml     # Two-job workflow: collect (10 min) + retrain (weekly)
+│
+├── .planning/              # GSD planning artifacts (not committed for prod)
+│   └── codebase/
+│
+├── .venv/                  # Python virtualenv (not committed)
+├── requirements.txt        # Python dependencies
+├── CLAUDE.md               # Project rules for Claude
+├── CONTEXT.md              # Project context for Claude
+└── status.json             # Local pipeline output (dev only)
+```
+
+## Directory Purposes
+
+**`pipeline/`:**
+- Purpose: All Python pipeline logic — collectors, validation, scoring, lifecycle
+- Contains: Python modules, all snake_case filenames
+- Key files: `main.py` (orchestrator), `regions.py` (region registry), `scorer.py`, `validation.py`
+
+**`app/`:**
+- Purpose: Next.js 14 frontend, statically exported to CDN
+- Contains: TypeScript pages, components, lib utilities, public assets
+- Key files: `pages/index.tsx` (only page), `lib/api.ts` (data contracts), `contexts/AppContext.tsx`
+
+**`app/components/mobile/`:**
+- Purpose: Full-screen mobile UI — one component per tab/screen
+- Contains: MobileShell wrapper + five Screen components + supporting UI
+- Pattern: Screen components receive `theme`, `lang`, and data props — no direct API calls
+
+**`app/components/primitives/`:**
+- Purpose: Reusable visual building blocks with no business logic
+- Contains: Charts, indicators, labels, dots
+- Pattern: Receive all data as props, no state, no context access
+
+**`app/lib/`:**
+- Purpose: Shared utilities, data fetching, types
+- Contains: `api.ts` (StatusJson interfaces + fetch/submit functions), `history.ts`, `theme.ts`, `i18n.ts`
+- Key constraint: `api.ts` is the ONLY file that touches network requests
+
+**`app/public/history/`:**
+- Purpose: Per-region historical data as static JSON files
+- Contains: `{region_key}.json` files matching `RegionHistory` interface in `lib/history.ts`
+- Generated by: `pipeline/backfill_history.py`
+
+**`tests/`:**
+- Purpose: Python unit and integration tests for all pipeline modules
+- Contains: One test file per pipeline module + integration tests
+- Pattern: Co-located to repo root (not inside `pipeline/`) for pytest discovery
+
+**`models/`:**
+- Purpose: Serialized ML model artifacts
+- Contains: `duration_model.pkl`, `duration_features.pkl` (joblib format)
+- Generated by: `pipeline/train_duration_model.py` via weekly GitHub Actions job
+- Not committed: Generated at runtime, uploaded to R2
+
+**`docs/adr/`:**
+- Purpose: Architecture Decision Records — immutable rationale for locked decisions
+- Contains: Numbered ADRs for major design choices
+- Key constraint: Never change the stack without a new ADR
+
+## Key File Locations
+
+**Entry Points:**
+- `pipeline/main.py`: Pipeline orchestrator — `run()` (testable) and `main()` (CLI)
+- `pipeline/train_duration_model.py`: Weekly model retraining entry point
+- `app/pages/index.tsx`: Sole frontend page
+- `app/pages/_app.tsx`: AppProvider mount point
+
+**Configuration:**
+- `.github/workflows/collect.yml`: Cron schedule, env var injection, job definitions
+- `app/next.config.js`: Static export config
+- `app/tsconfig.json`: TypeScript strict mode config
+- `requirements.txt`: Python dependencies
+
+**Core Logic:**
+- `pipeline/regions.py`: Region registry — all 17 regions with coordinates
+- `pipeline/scorer.py`: Signal weighting formula (ADR-009)
+- `pipeline/validation.py`: Report validation rules (rate limit, geo, contradiction)
+- `pipeline/cross_validation.py`: Crowd vs passive agreement logic
+- `app/lib/api.ts`: All TypeScript interfaces for status.json + network calls
+
+**Testing:**
+- `tests/test_validation.py`, `tests/test_scorer.py`, `tests/test_quorum.py`: Core logic tests
+- `tests/test_pipeline_integration.py`: End-to-end pipeline cycle test
+- `tests/test_collector_*.py`: Collector tests with mock data (run offline)
+
+**Database Schema:**
+- `docs/schema.sql`: Supabase table definitions (source of truth for DB structure)
+
+## Naming Conventions
+
+**Files:**
+- Python pipeline: `snake_case.py` — e.g., `collector_viirs.py`, `outage_lifecycle.py`
+- TypeScript components: `PascalCase.tsx` — e.g., `MobileShell.tsx`, `ScreenZoneDetail.tsx`
+- TypeScript utilities: `camelCase.ts` — e.g., `api.ts`, `history.ts`, `demoData.ts`
+- Test files: `test_{module}.py` — mirrors the module being tested
+
+**Identifiers:**
+- Region keys: `lowercase_snake_case` — e.g., `"maracaibo"`, `"ciudad_guayana"`
+- Outage status values: `"no_power" | "power_back" | "unstable"` (fixed set)
+- Database columns: `snake_case`
+- Python functions: `snake_case`, private functions prefixed `_`
+- TypeScript interfaces: `PascalCase` — e.g., `RegionEntry`, `StatusJson`
+- TypeScript hooks: `use` prefix — e.g., `useAutoRefresh`, `useRegionHistory`
+- CSS variables: `--kebab-case` — e.g., `--font-mono`, `--panel`
+
+**Directories:**
+- Feature groupings: `snake_case` at repo root (`pipeline/`, `tests/`, `models/`)
+- Frontend groupings: `camelCase` inside `app/` (`components/`, `contexts/`, `lib/`)
+
+## Where to Add New Code
+
+**New collector (external data source):**
+- Implementation: `pipeline/collector_{name}.py`
+- Must: Return typed dict, wrap all HTTP calls in try/except, be stateless
+- Integrate into: `pipeline/main.py::_fetch_passive_signals()` with try/except isolation
+- Tests: `tests/test_collector_{name}.py` with mock HTTP responses (offline)
+
+**New pipeline analysis module:**
+- Implementation: `pipeline/{module_name}.py` with snake_case filename
+- Tests: `tests/test_{module_name}.py`
+- Integration: Called from `pipeline/main.py::run()` or `score_region()`
+
+**New frontend screen (tab):**
+- Implementation: `app/components/mobile/Screen{Name}.tsx`
+- Add tab: `app/components/mobile/TabBar.tsx` (add `TabId` type)
+- Wire to router: `app/pages/index.tsx::renderContent()` switch statement
+
+**New frontend primitive (visual component):**
+- Implementation: `app/components/primitives/{Name}.tsx`
+- Pattern: Props-only, no network calls, no context access
+
+**New region:**
+- Only location: `pipeline/regions.py::REGIONS` dict
+- Key format: `lowercase_snake_case` with no spaces
+- No other file needs changing — all pipeline modules iterate `REGIONS`
+
+**New status.json field:**
+- Add to: `pipeline/main.py::score_region()` return dict or `build_status_json()`
+- Mirror in: `app/lib/api.ts` TypeScript interfaces (`RegionEntry` or `StatusJson`)
+- Both sides must stay in sync manually
+
+**New utility (shared frontend logic):**
+- Location: `app/lib/{name}.ts`
+- Pattern: Pure functions or React hooks; export named functions
+
+## Special Directories
+
+**`app/out/`:**
+- Purpose: Next.js static export build artifact
+- Generated: Yes (`next build` with `output: 'export'`)
+- Committed: No for development purposes; deployed to CDN
+
+**`app/public/history/`:**
+- Purpose: Static per-region history JSON served alongside the app
+- Generated: Yes, by `pipeline/backfill_history.py`
+- Committed: Yes (static assets that ship with the frontend)
+
+**`models/`:**
+- Purpose: Serialized ML models for duration estimation
+- Generated: Yes, by `pipeline/train_duration_model.py` (weekly)
+- Committed: No — generated artifacts, uploaded to R2
+
+**`.planning/`:**
+- Purpose: GSD planning artifacts — phase plans, codebase maps
+- Generated: By Claude via `/gsd:` commands
+- Committed: No (working files for development sessions)
+
+**`.venv/`:**
+- Purpose: Python virtual environment
+- Generated: Yes
+- Committed: No
+
+---
+
+*Structure analysis: 2026-05-24*

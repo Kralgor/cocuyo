@@ -1,5 +1,7 @@
 # Cocuyo
 
+> **Español:** [README.es.md](README.es.md)
+
 Real-time power outage monitoring for Venezuela. Anonymous, open source, independent of any government.
 
 Cocuyo watches the grid with public data (satellite, internet signals, weather, crowd reports) and publishes per-zone outage status every 10 minutes — no Corpoelec cooperation needed. When the power goes out, Venezuelans find out instantly: where, how long, when it might come back.
