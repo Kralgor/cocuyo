@@ -20,22 +20,24 @@ Venezuelans get instant push notifications when power goes out or comes back in 
 - ✓ Bilingual support (ES/EN) — existing
 - ✓ Interactive Leaflet map — existing
 - ✓ Outage history data per region — existing
+- ✓ React Native (Expo) app for Android and iOS — Phase 1
+- ✓ View real-time outage status per zone (same status.json source) — Phase 1 (STAT-01)
+- ✓ Full offline mode: cached status, local timers, queued reports that sync when connectivity returns — Phase 1/2 (STAT-03, REPT-03)
+- ✓ Trust onboarding screen: open source, not govt, anonymous data, GitHub link — Phase 1 (TRST-01)
+- ✓ Persistent privacy/open-source section in settings — Phase 1 (TRST-02)
+- ✓ Submit outage reports with GPS auto-detect + manual zone fallback — Phase 2 (REPT-01/02)
+- ✓ WhatsApp sharing: one-tap share outage status ("sin luz hace 3 horas en Maracaibo") — Phase 2 (SHAR-01)
+- ✓ Emergency contacts section: per-zone utility company and emergency numbers — Phase 2 (BATT-03)
+- ✓ Dark mode with AMOLED true black (battery saving during outages) — Phase 2 (BATT-01)
+- ✓ Low battery mode: reduced refresh frequency below 20% battery — Phase 2 (BATT-02)
+- ✓ Push notifications: power out in zone, power restored, food spoilage warning, nearby zone outages — Phase 3 (code-complete; device UAT pending)
+- ✓ Food spoilage timers: pre-built Venezuelan food list + user-customizable items — Phase 4 (FOOD-01..04)
+- ✓ Outage history and patterns per zone ("power usually returns in ~X hours") — Phase 5 (STAT-04, code-complete 2026-08-14)
 
 ### Active
 
-- [ ] React Native (Expo) app for Android and iOS
-- [ ] View real-time outage status per zone (same status.json source)
-- [ ] Submit outage reports with GPS auto-detect + manual zone fallback
-- [ ] Push notifications: power out in zone, power restored, food spoilage warning, nearby zone outages
-- [ ] Food spoilage timers: pre-built Venezuelan food list + user-customizable items
-- [ ] Full offline mode: cached status, local timers, queued reports that sync when connectivity returns
-- [ ] Trust onboarding screen: open source, not govt, anonymous data, GitHub link
-- [ ] Persistent privacy/open-source section in settings
-- [ ] WhatsApp sharing: one-tap share outage status ("sin luz hace 3 horas en Maracaibo")
-- [ ] Dark mode with AMOLED true black (battery saving during outages)
-- [ ] Outage history and patterns per zone ("power usually returns in ~X hours")
-- [ ] Emergency contacts section: per-zone utility company and emergency numbers
-- [ ] Low battery mode: reduced refresh frequency below 20% battery
+- [ ] App live on Google Play Store — Phase 5 Gate A (human: $25 account, first manual AAB upload)
+- [ ] App live on Apple App Store — Phase 5 Gate B (human: $99/yr Apple Developer Program)
 
 ### Out of Scope
 
@@ -95,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-24 after initialization*
+*Last updated: 2026-08-14 — Phase 5 code-complete; only store-submission human gates remain*

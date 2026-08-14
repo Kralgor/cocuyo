@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Status Display
 
-- [ ] **STAT-01**: User can view real-time outage status for any zone
-- [ ] **STAT-02**: User can see how long a zone has been without power
-- [ ] **STAT-03**: User can view cached status data when offline, with visible staleness indicator
-- [ ] **STAT-04**: User can view outage history for their zone and see estimated return time based on past patterns
+- [x] **STAT-01**: User can view real-time outage status for any zone
+- [x] **STAT-02**: User can see how long a zone has been without power
+- [x] **STAT-03**: User can view cached status data when offline, with visible staleness indicator
+- [x] **STAT-04**: User can view outage history for their zone and see estimated return time based on past patterns
 
 ### Reporting
 
@@ -36,8 +36,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Trust & Privacy
 
-- [ ] **TRST-01**: User sees trust onboarding screen on first launch explaining open source status, anonymity, and non-government affiliation
-- [ ] **TRST-02**: User can access persistent privacy and open-source section in app settings with GitHub link
+- [x] **TRST-01**: User sees trust onboarding screen on first launch explaining open source status, anonymity, and non-government affiliation
+- [x] **TRST-02**: User can access persistent privacy and open-source section in app settings with GitHub link
 
 ### Sharing
 
@@ -100,35 +100,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAT-01 | Phase 1 | Pending |
-| STAT-02 | Phase 1 | Pending |
-| STAT-03 | Phase 1 | Pending |
-| STAT-04 | Phase 5 | Pending |
+| STAT-01 | Phase 1 | Complete |
+| STAT-02 | Phase 1 | Complete |
+| STAT-03 | Phase 1 | Complete |
+| STAT-04 | Phase 5 | Complete (code) — on-device visual check pending |
 | REPT-01 | Phase 2 | Complete |
 | REPT-02 | Phase 2 | Complete |
 | REPT-03 | Phase 2 | Complete |
-| NOTF-01 | Phase 3 | Pending |
-| NOTF-02 | Phase 3 | Pending |
+| NOTF-01 | Phase 3 | Pending (device UAT) |
+| NOTF-02 | Phase 3 | Pending (device UAT) |
 | NOTF-03 | Phase 4 | Complete |
-| NOTF-04 | Phase 3 | Pending |
+| NOTF-04 | Phase 3 | Pending (device UAT) |
 | FOOD-01 | Phase 4 | Complete |
 | FOOD-02 | Phase 4 | Complete |
 | FOOD-03 | Phase 4 | Complete |
 | FOOD-04 | Phase 4 | Complete |
-| TRST-01 | Phase 1 | Pending |
-| TRST-02 | Phase 1 | Pending |
+| TRST-01 | Phase 1 | Complete |
+| TRST-02 | Phase 1 | Complete |
 | SHAR-01 | Phase 2 | Complete |
 | BATT-01 | Phase 2 | Complete |
 | BATT-02 | Phase 2 | Complete |
 | BATT-03 | Phase 2 | Complete |
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
-| PLAT-04 | Phase 5 | Pending |
-| PLAT-05 | Phase 5 | Pending |
-| INFR-01 | Phase 3 | Pending |
-| INFR-02 | Phase 3 | Pending |
-| INFR-03 | Phase 3 | Pending |
+| PLAT-01 | Phase 1 | Pending (Android preview APK built; store build human-gated) |
+| PLAT-02 | Phase 1 | Pending (Apple Dev Program blocked) |
+| PLAT-03 | Phase 1 | Complete (EAS Update URL configured) |
+| PLAT-04 | Phase 5 | Pending (human gate: Play Console) |
+| PLAT-05 | Phase 5 | Pending (human gate: Apple Dev Program) |
+| INFR-01 | Phase 3 | Pending (device UAT) |
+| INFR-02 | Phase 3 | Pending (device UAT) |
+| INFR-03 | Phase 3 | Pending (device UAT) |
 
 **Coverage:**
 - v1 requirements: 29 total

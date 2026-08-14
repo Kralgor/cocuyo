@@ -78,3 +78,25 @@ jest.mock('expo-notifications', () => ({
 jest.mock('expo-device', () => ({
   isDevice: true,
 }));
+
+// ── react-native-svg mock ─────────────────────────────────────────────────────
+// Native SVG rendering is not available in jest. Mock renders React elements
+// so chart components (HistoryStrip, ForecastCurve) can render without native
+// modules. Text is aliased as SvgText in components — kept as a plain mock here.
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const mock = (name) => (props) => React.createElement(name, props);
+  return {
+    __esModule: true,
+    default: mock('Svg'),
+    Svg: mock('Svg'),
+    G: mock('G'),
+    Rect: mock('Rect'),
+    Line: mock('Line'),
+    Path: mock('Path'),
+    Defs: mock('Defs'),
+    LinearGradient: mock('LinearGradient'),
+    Stop: mock('Stop'),
+    Text: mock('SvgText'),
+  };
+});

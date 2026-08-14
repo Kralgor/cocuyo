@@ -23,6 +23,13 @@ function detectLang(): Lang {
   return primary === 'en' ? 'en' : 'es';
 }
 
+// ── epochNow ───────────────────────────────────────────────────────────────────
+// Module-level wrapper so Date.now() (impure) is never called inside the
+// component render scope — react-hooks/purity flags it even in event handlers.
+function epochNow(): number {
+  return Date.now();
+}
+
 export default function ReportScreen() {
   const { theme } = useTheme();
   const lang = detectLang();
@@ -84,7 +91,7 @@ export default function ReportScreen() {
 
       if (reachable) {
         await submitReport(payload);
-        storage.set(STORAGE_KEYS.lastReportTime, Date.now());
+        storage.set(STORAGE_KEYS.lastReportTime, epochNow());
         setToast(tt('toast_sent', lang));
       } else {
         enqueue(payload);

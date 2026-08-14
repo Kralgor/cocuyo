@@ -76,6 +76,7 @@
     ],
     "extra": {
       "statusCdnUrl": "https://cocuyo.kralgor.com/status.json",
+      "historyCdnUrl": "https://cocuyo.kralgor.com/history",
       "supabaseUrl": "https://wobbxgcslwibgbtvkbxz.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvYmJ4Z2NzbHdpYmdidHZrYnh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMTQyMjQsImV4cCI6MjA5NDg5MDIyNH0.30L-OpjUxqphVi6VjwX3dTjMnQI1LdlZ_gfn2bQDdyA",
       "router": {},

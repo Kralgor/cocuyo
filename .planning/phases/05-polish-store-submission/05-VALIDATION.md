@@ -1,10 +1,11 @@
 ---
 phase: 5
 slug: polish-store-submission
-status: draft
+status: executed
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-06-23
+updated: 2026-08-14
 ---
 
 # Phase 5 — Validation Strategy
@@ -39,18 +40,18 @@ created: 2026-06-23
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 05-01-* | 01 | 1 | STAT-04 | — | fetch returns null on non-OK; no PII stored | unit | `npm test --prefix mobile -- --testPathPattern=history` | ❌ W0 | ⬜ pending |
-| 05-02-* | 02 | 2 | STAT-04 | — | history/forecast render; graceful null state | unit | `npm test --prefix mobile` | ❌ W0 | ⬜ pending |
-| 05-03-* | 03 | 3 | PLAT-04/05 | — | only anon key in build config; no secrets committed | manual+config | `eas build --profile production --platform android` (human) | n/a | ⬜ pending |
+| 05-01-* | 01 | 1 | STAT-04 | — | fetch returns null on non-OK; no PII stored | unit | `npm test --prefix mobile -- --testPathPattern=history` | ✅ | ✅ green |
+| 05-02-* | 02 | 2 | STAT-04 | — | history/forecast render; graceful null state | unit | `npm test --prefix mobile` | ✅ | ✅ green |
+| 05-03-* | 03 | 3 | PLAT-04/05 | — | only anon key in build config; no secrets committed | manual+config | `eas build --profile production --platform android` (human) | ✅ config | ⏸ human-gated |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky · ⏸ human-gated*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `mobile/__tests__/lib/history.test.ts` — fetch + parse + null-state stubs for STAT-04
-- [ ] react-native-svg installed via `npx expo install react-native-svg` (v15.15.5)
+- [x] `mobile/__tests__/lib/history.test.ts` — fetch + parse + null-state stubs for STAT-04
+- [x] react-native-svg installed via `npx expo install react-native-svg` (v15.15.4 — SDK 56 resolved)
 
 *Existing jest-expo infrastructure covers the rest.*
 

@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Reporting + Sharing + Quick Wins** - GPS report flow, offline queue, WhatsApp sharing, emergency contacts, AMOLED, low-battery mode (completed 2026-06-12)
 - [x] **Phase 3: Push Notifications** - Expo push infrastructure, push_tokens table, notify.py pipeline module, NotificationHandler (code-complete 2026-06-13, 6/6 plans; device UAT pending)
 - [x] **Phase 4: Food Spoilage Timers** - Pre-built Venezuelan food list, custom items, local notifications, outage auto-start (completed 2026-06-19, 4/4 plans)
-- [ ] **Phase 5: Polish + Store Submission** - Outage history, return time estimate, EAS Submit to Google Play and App Store
+- [x] **Phase 5: Polish + Store Submission** - Outage history, return time estimate, EAS Submit to Google Play and App Store (code-complete 2026-08-14; store gates human-blocked)
 
 ## Phase Details
 
@@ -100,14 +100,14 @@ Plans:
 **Depends on**: Phase 4
 **Requirements**: STAT-04, PLAT-04, PLAT-05
 **Success Criteria** (what must be TRUE):
-  1. User can view outage history for their zone and see an estimated return time based on past patterns
-  2. The app is live on Google Play Store and downloadable on Android devices
-  3. The app is live on Apple App Store and downloadable on iOS devices
+  1. User can view outage history for their zone and see an estimated return time based on past patterns — ✅ CODE (History tab live: strip chart, stats, pattern card, 48h forecast)
+  2. The app is live on Google Play Store and downloadable on Android devices — ⏳ human gate (Play Console account $25, first manual AAB upload)
+  3. The app is live on Apple App Store and downloadable on iOS devices — ⏳ human gate (Apple Developer Program $99/yr, blocked since Phase 1)
 **Plans**: 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — react-native-svg install + history fetch lib (fetchRegionHistory, useHistory) + types + Wave 0 tests
-- [ ] 05-02-PLAN.md — History tab UI: HistoryStrip + ForecastCurve SVG port, real history.tsx screen (replaces PlaceholderTab)
-- [ ] 05-03-PLAN.md — EAS submit profiles (eas.json), app.json metadata, production Android build + Play Console gate, iOS App Store gate
+- [x] 05-01-PLAN.md — react-native-svg install + history fetch lib (fetchRegionHistory, useHistory) + types + Wave 0 tests (2026-08-14)
+- [x] 05-02-PLAN.md — History tab UI: HistoryStrip + ForecastCurve SVG port, real history.tsx screen (replaces PlaceholderTab) (2026-08-14)
+- [x] 05-03-PLAN.md — EAS submit profiles (eas.json), app.json metadata, production Android build + Play Console gate [Task 1 done 2026-08-14; Gates A/B human-blocked]
 **UI hint**: yes
 
 ## Progress
@@ -121,8 +121,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Reporting + Sharing + Quick Wins | 7/7 | Complete | 2026-06-12 |
 | 3. Push Notifications | 6/6 | Code-complete (device UAT pending) | 2026-06-13 |
 | 4. Food Spoilage Timers | 4/4 | Code-complete (device UAT pending) | 2026-06-19 |
-| 5. Polish + Store Submission | 0/TBD | Not started | - |
+| 5. Polish + Store Submission | 3/3 (Task 1 of 05-03) | Code-complete (store gates human-blocked) | 2026-08-14 |
 
 ---
 *Roadmap created: 2026-05-25*
-*Last updated: 2026-06-23 — corrected stale status table; Phases 1–4 code-complete, Phase 4 gate G4 closed*
+*Last updated: 2026-08-14 — Phase 5 executed (05-01, 05-02, 05-03 Task 1); remaining work is human-gated store submission*

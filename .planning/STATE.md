@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-PLAN.md (Phase 4 complete)
-last_updated: "2026-06-19T21:30:00.000Z"
-last_activity: 2026-06-19
+stopped_at: Phase 5 code-complete (05-01, 05-02, 05-03 Task 1); store gates human-blocked
+last_updated: "2026-08-14T00:00:00.000Z"
+last_activity: 2026-08-14
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 23
   completed_plans: 22
-  percent: 70
+  percent: 95
 ---
 
 # Project State
@@ -21,28 +21,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-25)
 
 **Core value:** Venezuelans get instant push notifications when power goes out or comes back in their zone, and can check outage status even without internet.
-**Current focus:** Phase 05 — polish + store submission (only remaining unbuilt phase)
+**Current focus:** Phase 05 — code complete; awaiting human store-submission gates (Google Play / Apple)
 
 ## Current Position
 
-Phases 1–4 are CODE-COMPLETE. Phase 5 is unplanned/unbuilt.
+Phases 1–5 are CODE-COMPLETE. Phase 5 was executed 2026-08-14; only human-gated store submission remains.
 
 - Phase 1 Foundation — done
 - Phase 2 Reporting/Sharing/Quick Wins — done
 - Phase 3 Push Notifications — code-complete + verified (FCM V1 + EXPO_ACCESS_TOKEN provisioned, Android preview build started); 4 on-device UAT items pending (03-HUMAN-UAT.md)
 - Phase 4 Food Timers — code-complete; gate G4 (dedicated Android 'food' channel) CLOSED 2026-06-23 (190/190 jest, tsc clean); on-device gates G1–G3, G5 pending
-- Phase 5 Polish + Store Submission — NOT planned, NOT built
+- Phase 5 Polish + Store Submission — CODE-COMPLETE 2026-08-14:
+  - 05-01 ✅ history fetch layer (react-native-svg, historyCdnUrl, lib/history.ts, 7 tests)
+  - 05-02 ✅ History tab UI (HistoryStrip, ForecastCurve, real history.tsx screen, 8 tests)
+  - 05-03 Task 1 ✅ eas.json submit profiles + app.json metadata verified
+  - 05-03 Gate A (Google Play) ⏳ human-blocked — $25 account, Play Console app, service-account JSON, first manual AAB upload
+  - 05-03 Gate B (iOS) ⏳ human-blocked — $99/yr Apple Developer Program (blocked since Phase 1), App Store Connect record
 
-Last activity: 2026-06-23 (G4 fix)
+Last activity: 2026-08-14 (Phase 5 execution)
 
-Progress: [████████░░] 4 of 5 phases code-complete
+Progress: [██████████] 5 of 5 phases code-complete (206 mobile jest + 547 pipeline pytest, tsc + lint clean)
 
 Outstanding human-gated items (no model can do these):
 - Phase 3: physical-device push smoke test (4 UAT items)
 - Phase 4: on-device permission/delivery/cancel (G1–G3), iOS delivery + Apple Developer Program (G5)
-- Phase 5: EAS Submit needs Google Play ($25) + Apple Developer ($99/yr) accounts + store listings
+- Phase 5 Gate A: Play Console app creation + service-account JSON + first manual AAB upload + listing
+- Phase 5 Gate B: Apple Developer Program enrollment + App Store Connect record + iOS build/submit
 
-Next (buildable): Plan Phase 05 — outage history + return-time estimate are code; store submission is human-gated.
+Next (buildable): NOTHING remains buildable — all code work complete.
 
 ## Performance Metrics
 
@@ -85,11 +91,10 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- [Pre-dev]: Verify Expo SDK version at project start (may be 53 not 52) before scaffolding
-- [Pre-dev]: NativeWind v4 stability with current SDK — fallback is StyleSheet + manual dark-mode context
-- [Phase 3]: Expo Push Token receipt polling and background-fetch iOS have breaking changes — research before Phase 3 planning
-- [Phase 5]: Historical outage data availability for return time estimate — validate before Phase 5 planning
-- [Phase 5]: CORPOELEC per-state emergency contact numbers require manual research
+- [Phase 3]: Expo Push Token receipt polling and background-fetch iOS have breaking changes — research before Phase 3 planning [RESOLVED — Phase 3 code-complete]
+- [Phase 5]: Historical outage data availability for return time estimate — validate before Phase 5 planning [RESOLVED — history JSON verified live at cocuyo.kralgor.com/history/{region}.json; History tab shipped]
+- [Phase 5]: CORPOELEC per-state emergency contact numbers require manual research — still outstanding (contacts.json has "Por verificar" placeholders for some states)
+- [Phase 5 Gate B]: Apple Developer Program enrollment ($99/yr) — blocked since Phase 1; blocks iOS store submission only
 
 ### Quick Tasks Completed
 

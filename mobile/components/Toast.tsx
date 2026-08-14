@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
@@ -9,7 +9,10 @@ interface ToastProps {
 
 export default function Toast({ message }: ToastProps) {
   const { theme } = useTheme();
-  const opacity = useRef(new Animated.Value(0)).current;
+  // useState lazy init keeps the Animated.Value stable across renders without
+  // reading a ref during render (React Compiler-safe; useRef().current in
+  // render body is flagged by react-hooks/purity).
+  const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (!message) return;

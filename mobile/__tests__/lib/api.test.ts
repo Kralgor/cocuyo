@@ -3,14 +3,14 @@
  * Covers: STAT-01 — fetchStatus() returns StatusJson from CDN, or offline flag on error
  */
 
-import { fetchStatus } from '../../lib/api';
-
-// ── fetch mock setup ───────────────────────────────────────────────────────────
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
-
 // ── mock expo-constants ────────────────────────────────────────────────────────
+// NOTE: babel.config.js uses babel-preset-expo WITHOUT the jest preset, so
+// jest.mock calls are NOT hoisted — the mock must be declared before the module
+// under test loads (hence require() below instead of a top-level import).
+// __esModule: true is REQUIRED — without it babel's _interopRequireDefault
+// double-wraps the mock and STATUS_CDN_URL falls back to the production URL.
 jest.mock('expo-constants', () => ({
+  __esModule: true,
   default: {
     expoConfig: {
       extra: {
@@ -19,6 +19,12 @@ jest.mock('expo-constants', () => ({
     },
   },
 }));
+
+const { fetchStatus } = require('../../lib/api');
+
+// ── fetch mock setup ───────────────────────────────────────────────────────────
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function makeMockStatusJson() {
@@ -64,6 +70,18 @@ describe('fetchStatus', () => {
     expect(result.data?.updated_at).toBe('2026-05-25T12:00:00Z');
     expect(result.data?.regions.maracaibo.status).toBe('no_power');
     expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('fetches from the statusCdnUrl configured in app.json extra', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok:   true,
+      json: jest.fn().mockResolvedValueOnce(makeMockStatusJson()),
+    });
+
+    await fetchStatus();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch.mock.calls[0][0]).toBe('https://cdn.cocuyo.app/status.json');
   });
 
   it('returns { data: null, offline: false } on a non-OK response', async () => {

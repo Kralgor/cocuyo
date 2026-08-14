@@ -41,6 +41,8 @@ GoogleService-Info.plist
 *-firebase-adminsdk-*.json
 # EAS credentials (keystore refs / key material) — never commit
 credentials.json
+# Google Play service-account JSON for EAS Submit — SECRET, placed by human at Gate A. Never commit.
+/credentials/
 
 # typescript
 *.tsbuildinfo
