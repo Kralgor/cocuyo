@@ -4,7 +4,7 @@
 
 Real-time power outage monitoring for Venezuela. Anonymous, open source, independent of any government.
 
-Cocuyo watches the grid with public data (satellite, internet signals, weather, crowd reports) and publishes per-zone outage status every 10 minutes — no Corpoelec cooperation needed. When the power goes out, Venezuelans find out instantly: where, how long, when it might come back.
+Cocuyo publishes per-zone outage status every 10 minutes from public data: satellite, internet signals, weather, and crowd reports. It needs no cooperation from Corpoelec. The moment the grid fails, Venezuelans see the affected zone, the elapsed duration, and the estimated return time.
 
 ## Live
 
@@ -17,20 +17,20 @@ Cocuyo watches the grid with public data (satellite, internet signals, weather, 
 
 ## Why
 
-Corpoelec publishes no outage data. Venezuelans have zero information when the power goes out: cause, duration, or ETA. Cocuyo exists to fill that gap with data that is open, anonymous, and trustworthy.
+Corpoelec publishes no outage data. When the power goes out, Venezuelans get no information about cause, duration, or ETA. Cocuyo fills that gap with open, anonymous data.
 
-**Design constraints that shape everything:**
+**Design constraints:**
 
-- **No server for reads** — the frontend is a static site that reads pre-computed JSON from a CDN. It survives outages, has no single point of failure, and costs almost nothing to run.
-- **Anonymous by design** — no accounts, no tracking, no location storage. Reports carry no identity.
-- **Offline-first** — Venezuelan internet is unreliable; the mobile app caches status and queues reports for when connectivity returns.
-- **Privacy over analytics** — the only key in client code is the Supabase anon key (ADR-007).
+- **No server for reads.** The frontend is a static site that reads pre-computed JSON from a CDN. It survives outages and costs almost nothing to run.
+- **Anonymous by design.** No accounts, no tracking, no location storage. Reports carry no identity.
+- **Offline-first.** Venezuelan internet is unreliable; the mobile app caches status and queues reports until connectivity returns.
+- **Privacy over analytics.** The only key in client code is the Supabase anon key (ADR-007).
 
 ## Features
 
-**Web app** — per-zone status with signal breakdown, 30-day outage history strip, 48h risk forecast, detected rationing patterns, bajones (voltage sag) tracking, report submission, bilingual ES/EN, interactive map, offline-capable service worker.
+**Web app:** per-zone status with signal breakdown, 30-day history strip, 48h risk forecast, detected rationing patterns, bajones tracking, report submission, ES/EN, interactive map, offline-capable service worker.
 
-**Mobile app (React Native / Expo)** — everything the web has plus:
+**Mobile app (React Native / Expo):** everything the web has, plus:
 
 - Push notifications for outages, restorations, and nearby-zone warnings
 - Food spoilage timers that auto-start on outage detection (Venezuelan food presets + custom items)
@@ -49,9 +49,9 @@ User tap → Supabase outage_reports → pipeline reads on next cron
 
 Three layers, each independently replaceable:
 
-1. **Collection** — Python pipeline (GitHub Actions cron, every 10 min) pulls from free public sources
-2. **Analysis** — blends signals into a 0–1 score per region, writes `status.json`, uploads to R2; weekly retrain job builds duration models + per-region history
-3. **Static frontends** — web (Next.js static export) and mobile (Expo) both read the same `status.json` contract; no server handles reads
+1. **Collection.** A Python pipeline (GitHub Actions cron, every 10 min) pulls from free public sources.
+2. **Analysis.** Signals blend into a 0-1 score per region, written to `status.json` and uploaded to R2. A weekly retrain job builds duration models and per-region history.
+3. **Static frontends.** The web (Next.js static export) and mobile (Expo) apps read the same `status.json` contract. No server handles reads.
 
 **Data sources:** satellite night lights (VIIRS), internet signal (RIPE Atlas, M-Lab, Cloudflare Radar), NASA POWER weather, Supabase crowd reports, and a duration model trained on historical patterns.
 
@@ -63,11 +63,11 @@ Three layers, each independently replaceable:
 /               this repo
   /pipeline     Python: collectors, scorer, notify (push fan-out), history backfill
   /tests        pipeline test suite (547 tests)
-  /app          web frontend — Next.js static export
-  /mobile       mobile app — React Native (Expo SDK 56), Expo Router
+  /app          web frontend, Next.js static export
+  /mobile       mobile app, React Native (Expo SDK 56), Expo Router
   /models       trained duration models
   /docs         SPEC.md (full spec), ARCHITECTURE.md, ADRs, schema.sql
-  /.github      collect.yml — 10-min collection + weekly retrain
+  /.github      collect.yml, 10-min collection + weekly retrain
   /.planning    GSD planning: roadmap, requirements, phase plans
 ```
 
@@ -91,7 +91,7 @@ npm run dev                   # or: npm run build && npx serve out
 npm run lint
 ```
 
-The web app is a static export — `npm run build` produces `app/out/`, deployable to any static host. `status.json` and `history/` are fetched from the CDN at runtime (override with `NEXT_PUBLIC_STATUS_URL` / `NEXT_PUBLIC_HISTORY_BASE`).
+The web app is a static export. `npm run build` produces `app/out/`, deployable to any static host. `status.json` and `history/` are fetched from the CDN at runtime (override with `NEXT_PUBLIC_STATUS_URL` / `NEXT_PUBLIC_HISTORY_BASE`).
 
 ### Mobile app
 
@@ -104,7 +104,7 @@ npx tsc --noEmit
 npx expo lint
 ```
 
-Production builds and store submission go through EAS (`eas build --profile production`). Store submission is pending the Google Play ($25) and Apple Developer ($99/yr) accounts — see `.planning/phases/05-polish-store-submission/05-03-SUMMARY.md` for the human gate checklist.
+Production builds and store submission go through EAS (`eas build --profile production`). Store submission waits on the Google Play ($25) and Apple Developer ($99/yr) accounts. See the human gate checklist in `.planning/phases/05-polish-store-submission/05-03-SUMMARY.md`.
 
 ### Supabase
 
@@ -132,8 +132,8 @@ Ongoing human items: physical-device UAT (push + food timers), Play/App Store su
 
 ## Trust
 
-Cocuyo is open source by conviction — surveillance is not the business. No user accounts, no tracking, no data resale. Every line of code is in this repository. Reports are anonymous: location is used only to auto-detect your zone at submit time and is never stored, and nothing identifies the reporter.
+No user accounts, no tracking, no data resale. Every line of code is in this repository. Reports are anonymous: location is used only to auto-detect your zone at submit time and is never stored. Nothing identifies the reporter.
 
 ## License
 
-Open source public good. A license decision hasn't been made yet — see the maintainer before reusing code commercially.
+Open source public good. No license decision yet. Ask the maintainer before reusing code commercially.
