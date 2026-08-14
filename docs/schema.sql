@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS outage_reports (
     device_fingerprint   TEXT,
     onset_type           TEXT,                   -- null in Phase 1
     symptom              TEXT,                   -- null in Phase 1
-    city_freetext        TEXT,                   -- for region = 'unlisted'
+  city_freetext        TEXT,                   -- for region = 'unlisted'
+  parroquia            TEXT,                   -- optional Phase 2 zone refinement
     confirmed_by_passive BOOLEAN DEFAULT FALSE
 );
 
@@ -38,7 +39,10 @@ CREATE INDEX IF NOT EXISTS idx_reports_recent
 CREATE INDEX IF NOT EXISTS idx_reports_device
     ON outage_reports (device_fingerprint, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reports_ip_hash
-    ON outage_reports (ip_hash, created_at DESC);
+ON outage_reports (ip_hash, created_at DESC);
+
+ALTER TABLE outage_reports
+ADD COLUMN IF NOT EXISTS parroquia TEXT;
 
 
 CREATE TABLE IF NOT EXISTS outage_history (
@@ -124,8 +128,11 @@ GRANT INSERT (
     onset_type,
     symptom,
     device_fingerprint,
-    city_freetext
+  city_freetext,
+  parroquia
 ) ON outage_reports TO anon;
+
+GRANT INSERT (parroquia) ON outage_reports TO anon;
 
 
 -- ============================================================
@@ -298,3 +305,70 @@ GRANT EXECUTE ON FUNCTION get_recent_count(TEXT, INT) TO anon;
 -- INSERT INTO outage_reports (region, status) VALUES ('maracaibo', 'no_power');
 -- SELECT id, region, status, ip_hash FROM outage_reports ORDER BY id DESC LIMIT 1;
 -- Expected: ip_hash is NOT NULL (trigger fired), state/sub_zone/confirmed_by_passive are defaults.
+-- Phase 3 push subscriptions.
+-- ADR-005 keeps subscriptions anonymous: no device_fingerprint column.
+-- ADR-007 two-key model: anon may write its token preferences; service_role
+-- performs all fan-out reads and log writes from the pipeline.
+CREATE TABLE IF NOT EXISTS push_tokens (
+  expo_token TEXT PRIMARY KEY,
+  zone TEXT NOT NULL,
+  platform TEXT NOT NULL CHECK (platform IN ('android', 'ios')),
+  notify_outage BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_restoration BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_neighbor BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_push_tokens_expo_token
+  ON push_tokens (expo_token);
+CREATE INDEX IF NOT EXISTS idx_push_tokens_zone
+  ON push_tokens (zone);
+
+ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS push_tokens_anon_insert ON push_tokens;
+CREATE POLICY push_tokens_anon_insert ON push_tokens
+  FOR INSERT TO anon
+  WITH CHECK (TRUE);
+
+DROP POLICY IF EXISTS push_tokens_anon_update ON push_tokens;
+CREATE POLICY push_tokens_anon_update ON push_tokens
+  FOR UPDATE TO anon
+  USING (TRUE)
+  WITH CHECK (TRUE);
+
+DROP POLICY IF EXISTS push_tokens_anon_select ON push_tokens;
+CREATE POLICY push_tokens_anon_select ON push_tokens
+  FOR SELECT TO anon
+  USING (TRUE);
+
+REVOKE ALL ON push_tokens FROM anon;
+GRANT INSERT (expo_token, zone, platform, notify_outage, notify_restoration, notify_neighbor)
+  ON push_tokens TO anon;
+GRANT UPDATE (zone, notify_outage, notify_restoration, notify_neighbor, updated_at)
+  ON push_tokens TO anon;
+GRANT SELECT ON push_tokens TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON push_tokens TO service_role;
+
+CREATE TABLE IF NOT EXISTS notification_log (
+  id BIGSERIAL PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('outage', 'restoration', 'neighbor_outage')),
+  zone TEXT NOT NULL,
+  ticket_id TEXT,
+  expo_token TEXT,
+  token_count INTEGER NOT NULL DEFAULT 0,
+  sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notif_log_zone_type
+  ON notification_log (zone, event_type, sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_log_ticket
+  ON notification_log (ticket_id)
+  WHERE ticket_id IS NOT NULL;
+
+ALTER TABLE notification_log ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON notification_log FROM anon;
+GRANT SELECT, INSERT, UPDATE ON notification_log TO service_role;

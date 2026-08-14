@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, Animated, StyleSheet } from 'react-native';
 import { getLocales } from 'expo-localization';
 import { statusColor, statusLabel } from '@/lib/theme';
 import { formatDuration } from '@/lib/i18n';
@@ -40,7 +40,9 @@ export default function StatusHero({ status, outage, isLoading = false }: Status
 
   // ── shimmer animation ──────────────────────────────────────────────────────
   // Opacity pulse 0.5→1.0→0.5 loop, 1200ms, ease-in-out (UI-SPEC Skeleton states)
-  const shimmerOpacity = useRef(new Animated.Value(0.5)).current;
+  // useState lazy init: stable Animated.Value without ref-during-render
+  // (react-hooks/purity requires no useRef().current reads in render body).
+  const [shimmerOpacity] = useState(() => new Animated.Value(0.5));
   useEffect(() => {
     if (!isLoading) {
       shimmerOpacity.setValue(1);

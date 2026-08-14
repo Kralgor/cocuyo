@@ -28,7 +28,7 @@ function detectLang(): Lang {
 const GITHUB_URL = 'https://github.com/kralgor/cocuyo';
 
 // ── ThemeOption ────────────────────────────────────────────────────────────────
-type ThemeOption = 'system' | 'light' | 'dark';
+type ThemeOption = 'system' | 'light' | 'dark' | 'amoled';
 
 // ── SettingsModalProps ────────────────────────────────────────────────────────
 interface SettingsModalProps {
@@ -60,11 +60,12 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
   const selectedZone = storage.getString(STORAGE_KEYS.selectedZone) ?? '';
 
   // ── theme segmented control ───────────────────────────────────────────────
-  // Maps UI option → setOverride argument (null | 'light' | 'dark')
-  const themeOptions: { key: ThemeOption; label: string; overrideValue: null | 'light' | 'dark' }[] = [
+  // Maps UI option → setOverride argument (null | 'light' | 'dark' | 'amoled')
+  const themeOptions: { key: ThemeOption; label: string; overrideValue: null | 'light' | 'dark' | 'amoled' }[] = [
     { key: 'system', label: tt('settings_theme_sys',   lang), overrideValue: null    },
     { key: 'light',  label: tt('settings_theme_light', lang), overrideValue: 'light' },
     { key: 'dark',   label: tt('settings_theme_dark',  lang), overrideValue: 'dark'  },
+    { key: 'amoled', label: tt('theme_amoled', lang), overrideValue: 'amoled' },
   ];
   // Derive active option from current override value
   const activeThemeKey: ThemeOption =

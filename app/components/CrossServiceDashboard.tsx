@@ -62,7 +62,7 @@ function inetStatus(score: number | null): { status: ServiceStatus; detailEs?: s
   };
 }
 
-function waterStatus(risk: Props['waterRisk'], outageHours: number | null): { status: ServiceStatus; detailEs?: string; detailEn?: string } {
+function waterStatus(risk: Props['waterRisk']): { status: ServiceStatus; detailEs?: string; detailEn?: string } {
   if (risk == null) return { status: 'pending' };
   switch (risk) {
     case 'critical':
@@ -102,7 +102,7 @@ export default function CrossServiceDashboard({ theme: t, lang, regionEntry, reg
 
   const elec = elecStatus(regionEntry);
   const inet = inetStatus(regionEntry?.signals?.internet ?? null);
-  const water = waterStatus(waterRisk, outageHours);
+  const water = waterStatus(waterRisk);
   const cell  = cellStatus(inet.status, outageHours);
 
   const rows: ServiceRow[] = [

@@ -49,3 +49,12 @@ export const DARK_THEME: MobileTheme = {
   line:        'rgba(240,235,224,0.08)',  // subtle dividers
   lineStrong:  'rgba(240,235,224,0.20)',  // strong dividers, signal bar track
 };
+
+// AMOLED Theme ───────────────────────────────────────────────────────────────
+export const AMOLED_THEME: MobileTheme & { surface: string; text: string } = {
+  ...DARK_THEME,
+  bg: '#000000',
+  panel: '#0A0A0A',
+  surface: '#000000',
+  text: DARK_THEME.ink,
+};

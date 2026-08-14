@@ -41,13 +41,7 @@ interface Props {
   regionName?: string;
 }
 
-const STATUSES = [
-  { key: 'no_power',  labelKey: 'report_no_pwr', primary: true  },
-  { key: 'power_back',labelKey: 'report_back',   primary: false },
-  { key: 'unstable',  labelKey: 'report_unst',   primary: false },
-] as const;
-
-export default function ReportButtons({ theme: t, lang, regionKey, regionName }: Props) {
+export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const undoRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const coolRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -257,7 +251,7 @@ export default function ReportButtons({ theme: t, lang, regionKey, regionName }:
             onClick={() => handleReport('power_back')}
             disabled={isSubmitting}
             style={{
-              ...secondaryBtn(t, t.ok),
+              ...secondaryBtn(t),
               opacity: isSubmitting && submittingStatus !== 'power_back' ? 0.5 : 1,
             }}
           >
@@ -269,7 +263,7 @@ export default function ReportButtons({ theme: t, lang, regionKey, regionName }:
             onClick={() => handleReport('unstable')}
             disabled={isSubmitting}
             style={{
-              ...secondaryBtn(t, t.warn),
+              ...secondaryBtn(t),
               opacity: isSubmitting && submittingStatus !== 'unstable' ? 0.5 : 1,
             }}
           >
@@ -300,7 +294,7 @@ function primaryBtn(t: Theme): React.CSSProperties {
   };
 }
 
-function secondaryBtn(t: Theme, color: string): React.CSSProperties {
+function secondaryBtn(t: Theme): React.CSSProperties {
   return {
     padding: '12px 10px',
     border: `0.5px solid ${t.line}`,

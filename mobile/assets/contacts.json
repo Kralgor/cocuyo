@@ -1,0 +1,25 @@
+[
+  {
+    "state": "national",
+    "entries": [
+      { "name": "Emergencias", "number": "911", "verified": true },
+      { "name": "Ven 911", "number": "911", "verified": true }
+    ]
+  },
+  { "state": "Zulia", "entries": [{ "name": "CORPOELEC Zulia", "number": "por confirmar", "verified": false }] },
+  { "state": "Tachira", "entries": [{ "name": "CORPOELEC Tachira", "number": "por confirmar", "verified": false }] },
+  { "state": "Merida", "entries": [{ "name": "CORPOELEC Merida", "number": "por confirmar", "verified": false }] },
+  { "state": "Trujillo", "entries": [{ "name": "CORPOELEC Trujillo", "number": "por confirmar", "verified": false }] },
+  { "state": "Lara", "entries": [{ "name": "CORPOELEC Lara", "number": "por confirmar", "verified": false }] },
+  { "state": "Falcon", "entries": [{ "name": "CORPOELEC Falcon", "number": "por confirmar", "verified": false }] },
+  { "state": "Carabobo", "entries": [{ "name": "CORPOELEC Carabobo", "number": "por confirmar", "verified": false }] },
+  { "state": "Aragua", "entries": [{ "name": "CORPOELEC Aragua", "number": "por confirmar", "verified": false }] },
+  { "state": "Distrito Capital", "entries": [{ "name": "CORPOELEC Distrito Capital", "number": "por confirmar", "verified": false }] },
+  { "state": "Miranda", "entries": [{ "name": "CORPOELEC Miranda", "number": "por confirmar", "verified": false }] },
+  { "state": "Barinas", "entries": [{ "name": "CORPOELEC Barinas", "number": "por confirmar", "verified": false }] },
+  { "state": "Monagas", "entries": [{ "name": "CORPOELEC Monagas", "number": "por confirmar", "verified": false }] },
+  { "state": "Anzoategui", "entries": [{ "name": "CORPOELEC Anzoategui", "number": "por confirmar", "verified": false }] },
+  { "state": "Sucre", "entries": [{ "name": "CORPOELEC Sucre", "number": "por confirmar", "verified": false }] },
+  { "state": "Nueva Esparta", "entries": [{ "name": "CORPOELEC Nueva Esparta", "number": "por confirmar", "verified": false }] },
+  { "state": "Bolivar", "entries": [{ "name": "CORPOELEC Bolivar", "number": "por confirmar", "verified": false }] }
+]

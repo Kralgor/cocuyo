@@ -17,6 +17,7 @@ models/*.pkl
 node_modules/
 .next/
 /out/
+*.tsbuildinfo
 
 # OS
 .DS_Store
@@ -24,6 +25,10 @@ Thumbs.db
 
 # Claude Code (local settings may contain tokens)
 .claude/
+
+# Agent tooling (serena project cache, headroom-generated root AGENTS.md)
+.serena/
+/AGENTS.md
 
 # Misc
 status.json

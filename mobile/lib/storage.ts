@@ -17,6 +17,18 @@ export const storage = createMMKV({ id: 'cocuyo' });
 export const STORAGE_KEYS = {
   hasSeenOnboarding: 'hasSeenOnboarding',          // boolean — trust screen shown once (D-08)
   selectedZone:      'selectedZone',               // string  — canonical region key from regions.ts
-  themeOverride:     'themeOverride',              // 'light' | 'dark' | null (missing = follow system)
+  themeOverride:     'themeOverride',              // 'light' | 'dark' | 'amoled' | null (missing = follow system)
   cacheTimestamp:    'statusCacheTimestamp',       // number  — epoch ms of last successful fetchStatus()
+  reportQueue:       'reportQueue',                // JSON-serialized QueuedReport[]
+  lastReportTime:    'lastReportTime',             // epoch ms of last enqueue for 30-min dedup
+  pushPermissionGranted: 'pushPermissionGranted',
+  pushToken: 'pushToken',
+  notifyOutage: 'notifyOutage',
+  notifyRestoration: 'notifyRestoration',
+  notifyNeighbor: 'notifyNeighbor',
+  // ── food spoilage timers (Phase 4) ── local/offline only (D-06), no backend/sync/sensors
+  foodTrackedItems: 'foodTrackedItems',            // JSON-serialized TrackedFoodItem[]
+  foodTimerState: 'foodTimerState',                // JSON — timer anchor/outage-start cache
+  foodNotificationPrefs: 'foodNotificationPrefs',  // JSON — per-food/global notification toggles
+  foodDismissedWarnings: 'foodDismissedWarnings',  // JSON — dismissed warning IDs for current outage
 } as const;

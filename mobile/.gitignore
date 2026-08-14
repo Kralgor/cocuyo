@@ -33,6 +33,17 @@ yarn-error.*
 # local env files
 .env*.local
 
+# FCM / Firebase credential — never commit, provided via EAS file env var GOOGLE_SERVICES_JSON
+google-services.json
+GoogleService-Info.plist
+
+# Firebase Admin SDK service-account key (FCM V1) — SECRET, server-side access. Never commit.
+*-firebase-adminsdk-*.json
+# EAS credentials (keystore refs / key material) — never commit
+credentials.json
+# Google Play service-account JSON for EAS Submit — SECRET, placed by human at Gate A. Never commit.
+/credentials/
+
 # typescript
 *.tsbuildinfo
 

@@ -3,7 +3,6 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
@@ -30,7 +29,7 @@ function detectLang(): Lang {
 // ── trust points ───────────────────────────────────────────────────────────────
 // 4 trust points from UI-SPEC Copywriting Contract (TRST-01, D-07).
 // Each entry maps to a pair of i18n keys: heading + body.
-const TRUST_POINTS: Array<{ headingKey: string; bodyKey: string }> = [
+const TRUST_POINTS: { headingKey: string; bodyKey: string }[] = [
   { headingKey: 'trust_open_source_h', bodyKey: 'trust_open_source_b' },
   { headingKey: 'trust_anonymous_h',   bodyKey: 'trust_anonymous_b' },
   { headingKey: 'trust_political_h',   bodyKey: 'trust_political_b' },

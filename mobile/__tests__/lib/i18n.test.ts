@@ -40,6 +40,46 @@ describe('tt', () => {
   it('returns search_placeholder in EN', () => {
     expect(tt('search_placeholder', 'en')).toBe('Search zones…');
   });
+
+  // ── food keys (Phase 4) ──────────────────────────────────────────────────
+  it('returns Spanish food strings for known food keys', () => {
+    expect(tt('food_title', 'es')).toBe('Comida sin luz');
+    expect(tt('food_restored_h', 'es')).toBe('Volvio la luz');
+    expect(tt('food_level_expired', 'es')).toBe('Paso el limite');
+  });
+
+  it('falls back to the key for an unknown food key', () => {
+    expect(tt('food_does_not_exist', 'es')).toBe('food_does_not_exist');
+  });
+
+  it('food copy never declares food safe or claims fridge temperature', () => {
+    const keys = [
+      'food_restored_note',
+      'food_level_safe',
+      'food_level_warning',
+      'food_level_expired',
+      'food_caution_early',
+    ];
+    for (const k of keys) {
+      const es = tt(k, 'es');
+      expect(es.toLowerCase()).not.toContain('segura comer');
+      expect(es.toLowerCase()).not.toContain('comida segura');
+      expect(es).not.toMatch(/\d+\s?°/);
+    }
+  });
+
+  it('new food strings stay ASCII-only (no accents introduced by this plan)', () => {
+    const foodKeys = [
+      'food_title', 'food_subtitle', 'food_no_zone', 'food_empty_tracked',
+      'food_outage_prompt', 'food_stale_note', 'food_offline_note',
+      'food_restored_h', 'food_restored_note', 'food_caution_early',
+      'food_alerts_body', 'food_alerts_soon',
+    ];
+    for (const k of foodKeys) {
+      // eslint-disable-next-line no-control-regex
+      expect(tt(k, 'es')).toMatch(/^[\x00-\x7F]*$/);
+    }
+  });
 });
 
 // ── formatDuration() tests ─────────────────────────────────────────────────────

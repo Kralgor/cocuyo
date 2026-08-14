@@ -13,10 +13,10 @@ Five phases from Expo scaffold to published stores. Phase 1 builds the offline-f
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + Offline Core** - Expo scaffold, MMKV status cache, trust onboarding, privacy strings
-- [ ] **Phase 2: Reporting + Sharing + Quick Wins** - GPS report flow, offline queue, WhatsApp sharing, emergency contacts, AMOLED, low-battery mode
-- [ ] **Phase 3: Push Notifications** - Expo push infrastructure, push_tokens table, notify.py pipeline module, NotificationHandler
-- [ ] **Phase 4: Food Spoilage Timers** - Pre-built Venezuelan food list, custom items, local notifications, outage auto-start
-- [ ] **Phase 5: Polish + Store Submission** - Outage history, return time estimate, EAS Submit to Google Play and App Store
+- [x] **Phase 2: Reporting + Sharing + Quick Wins** - GPS report flow, offline queue, WhatsApp sharing, emergency contacts, AMOLED, low-battery mode (completed 2026-06-12)
+- [x] **Phase 3: Push Notifications** - Expo push infrastructure, push_tokens table, notify.py pipeline module, NotificationHandler (code-complete 2026-06-13, 6/6 plans; device UAT pending)
+- [x] **Phase 4: Food Spoilage Timers** - Pre-built Venezuelan food list, custom items, local notifications, outage auto-start (completed 2026-06-19, 4/4 plans)
+- [x] **Phase 5: Polish + Store Submission** - Outage history, return time estimate, EAS Submit to Google Play and App Store (code-complete 2026-08-14; store gates human-blocked)
 
 ## Phase Details
 
@@ -49,7 +49,15 @@ Plans:
   3. User can share outage status to WhatsApp with one tap, producing pre-formatted Spanish text
   4. User can view emergency contacts (utility company, emergency services) for their selected zone
   5. User can enable AMOLED true-black dark mode, and the app automatically reduces refresh frequency when battery drops below 20%
-**Plans**: TBD
+**Plans**: 7 plans
+Plans:
+- [x] 02-01-PLAN.md — Foundation: install deps, app.json (anon Supabase + expo-location), storage/i18n/jest mocks, parroquia schema doc + migration checkpoint
+- [x] 02-02-PLAN.md — Wave 0: curate parroquias.json (incl. Zulia + DC) + contacts.json; 5 failing unit-test files
+- [x] 02-03-PLAN.md — Reporting core: submitReport (anon POST), MMKV offline queue (idempotent + cooldown), GPS nearest-zone detection
+- [x] 02-04-PLAN.md — Share lib (composeShareText honesty + WhatsApp/system fallback) + parroquias lookup
+- [x] 02-05-PLAN.md — AMOLED theme/context + useBattery + battery-adaptive useStatus + useReportQueue auto-sync
+- [x] 02-06-PLAN.md — Report flow UI: Toast + ReportConfirmSheet + full Report tab (GPS/manual, online/offline, cooldown)
+- [x] 02-07-PLAN.md — Zone tab: WhatsApp share button, Números útiles contacts card, share prompt, battery banner + Settings AMOLED option
 **UI hint**: yes
 
 ### Phase 3: Push Notifications
@@ -62,7 +70,13 @@ Plans:
   3. User receives a push notification when a neighboring zone experiences an outage (early warning)
   4. Pipeline detects status transitions (previous vs current zone status) and fires Expo Push API on changes
   5. Device push tokens with zone subscriptions are stored in Supabase push_tokens table and resolved at notification time
-**Plans**: TBD
+**Plans**: 6 plans
+- [ ] 03-01-PLAN.md — Wave 0: failing offline tests for pipeline fan-out and mobile token registration
+- [ ] 03-02-PLAN.md — Manual credential gate: Firebase FCM V1 and optional Expo push security
+- [ ] 03-03-PLAN.md — Schema and adjacency foundation: push_tokens, notification_log, ADJACENCY_MAP
+- [ ] 03-04-PLAN.md — Mobile registration plumbing: expo-notifications, registerToken, storage keys, adjacency mirror
+- [ ] 03-05-PLAN.md — Pipeline fan-out: notify.py, cooldown, unstable suppression, Expo batch send
+- [ ] 03-06-PLAN.md — Notify tab opt-in UX, permission helper, preferences hook, toggle sync
 
 ### Phase 4: Food Spoilage Timers
 **Goal**: Users can track food safety during outages using a pre-built Venezuelan food list, custom items, and automatic timer start on outage detection
@@ -73,7 +87,12 @@ Plans:
   2. User can add a custom food item with a name and spoilage threshold
   3. Food timers auto-start when an outage is detected in the user's zone (no manual action required)
   4. User receives a local notification when a tracked food item is approaching its spoilage limit
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [x] 04-01-PLAN.md — Food domain model + presets + MMKV helpers
+- [x] 04-02-PLAN.md — Food timer lifecycle state layer + useFoodTimers
+- [x] 04-03-PLAN.md — Spanish-first Food tab UI
+- [x] 04-04-PLAN.md — Local food spoilage notifications (+ gate G4: dedicated Android 'food' channel)
 **UI hint**: yes
 
 ### Phase 5: Polish + Store Submission
@@ -81,10 +100,14 @@ Plans:
 **Depends on**: Phase 4
 **Requirements**: STAT-04, PLAT-04, PLAT-05
 **Success Criteria** (what must be TRUE):
-  1. User can view outage history for their zone and see an estimated return time based on past patterns
-  2. The app is live on Google Play Store and downloadable on Android devices
-  3. The app is live on Apple App Store and downloadable on iOS devices
-**Plans**: TBD
+  1. User can view outage history for their zone and see an estimated return time based on past patterns — ✅ CODE (History tab live: strip chart, stats, pattern card, 48h forecast)
+  2. The app is live on Google Play Store and downloadable on Android devices — ⏳ human gate (Play Console account $25, first manual AAB upload)
+  3. The app is live on Apple App Store and downloadable on iOS devices — ⏳ human gate (Apple Developer Program $99/yr, blocked since Phase 1)
+**Plans**: 3 plans
+Plans:
+- [x] 05-01-PLAN.md — react-native-svg install + history fetch lib (fetchRegionHistory, useHistory) + types + Wave 0 tests (2026-08-14)
+- [x] 05-02-PLAN.md — History tab UI: HistoryStrip + ForecastCurve SVG port, real history.tsx screen (replaces PlaceholderTab) (2026-08-14)
+- [x] 05-03-PLAN.md — EAS submit profiles (eas.json), app.json metadata, production Android build + Play Console gate [Task 1 done 2026-08-14; Gates A/B human-blocked]
 **UI hint**: yes
 
 ## Progress
@@ -94,12 +117,12 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Offline Core | 5/6 | In Progress|  |
-| 2. Reporting + Sharing + Quick Wins | 0/TBD | Not started | - |
-| 3. Push Notifications | 0/TBD | Not started | - |
-| 4. Food Spoilage Timers | 0/TBD | Not started | - |
-| 5. Polish + Store Submission | 0/TBD | Not started | - |
+| 1. Foundation + Offline Core | 6/6 | Complete | 2026-06-10 |
+| 2. Reporting + Sharing + Quick Wins | 7/7 | Complete | 2026-06-12 |
+| 3. Push Notifications | 6/6 | Code-complete (device UAT pending) | 2026-06-13 |
+| 4. Food Spoilage Timers | 4/4 | Code-complete (device UAT pending) | 2026-06-19 |
+| 5. Polish + Store Submission | 3/3 (Task 1 of 05-03) | Code-complete (store gates human-blocked) | 2026-08-14 |
 
 ---
 *Roadmap created: 2026-05-25*
-*Last updated: 2026-05-25 after Phase 1 planning — 5 plans created*
+*Last updated: 2026-08-14 — Phase 5 executed (05-01, 05-02, 05-03 Task 1); remaining work is human-gated store submission*

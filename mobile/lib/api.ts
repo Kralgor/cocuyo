@@ -91,3 +91,74 @@ export async function fetchStatus(): Promise<{ data: StatusJson | null; offline:
     return { data: null, offline: true };
   }
 }
+
+// ── report submission ───────────────────────────────────────────────────────
+// Unlike fetchStatus(), submitReport may throw. The offline queue owns retries.
+const SUPABASE_URL = (Constants.expoConfig?.extra?.supabaseUrl as string) ?? '';
+const SUPABASE_KEY = (Constants.expoConfig?.extra?.supabaseAnonKey as string) ?? '';
+
+const REPORT_HEADERS = {
+  'Content-Type': 'application/json',
+  apikey: SUPABASE_KEY,
+  Authorization: `Bearer ${SUPABASE_KEY}`,
+  Prefer: 'return=minimal',
+};
+
+export interface ReportPayload {
+  region: string;
+  status: 'no_power' | 'power_back';
+  lat: number | null;
+  lon: number | null;
+  city_freetext: null;
+  onset_type: null;
+  symptom: null;
+  device_fingerprint: null;
+  parroquia: string | null;
+}
+
+export interface QueuedReport {
+  id: string;
+  payload: ReportPayload;
+  queued_at: string;
+  attempts: number;
+}
+
+export interface PushTokenPayload {
+  expo_token: string;
+  zone: string;
+  platform: 'android' | 'ios';
+  notify_outage: boolean;
+  notify_restoration: boolean;
+  notify_neighbor: boolean;
+}
+
+export async function registerToken(
+  payload: PushTokenPayload
+): Promise<{ ok: boolean; offline: boolean }> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/push_tokens`, {
+      method: 'POST',
+      headers: {
+        ...REPORT_HEADERS,
+        Prefer: 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    return { ok: res.ok, offline: false };
+  } catch {
+    return { ok: false, offline: true };
+  }
+}
+
+export async function submitReport(payload: ReportPayload): Promise<void> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
+    method: 'POST',
+    headers: REPORT_HEADERS,
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+}

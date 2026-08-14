@@ -1,0 +1,100 @@
+[
+  {
+    "estado": "Zulia",
+    "municipios": [
+      { "municipio": "Maracaibo", "parroquias": ["Bolivar", "Cacique Mara", "Chiquinquira", "Coquivacoa", "Juana de Avila", "Olegario Villalobos", "Santa Lucia"] }
+    ]
+  },
+  {
+    "estado": "Tachira",
+    "municipios": [
+      { "municipio": "San Cristobal", "parroquias": ["La Concordia", "Pedro Maria Morantes", "San Juan Bautista", "San Sebastian"] }
+    ]
+  },
+  {
+    "estado": "Merida",
+    "municipios": [
+      { "municipio": "Libertador", "parroquias": ["El Sagrario", "Milla", "Spinetti Dini", "Arias"] }
+    ]
+  },
+  {
+    "estado": "Trujillo",
+    "municipios": [
+      { "municipio": "Valera", "parroquias": ["Mercedes Diaz", "Juan Ignacio Montilla", "La Beatriz", "San Luis"] }
+    ]
+  },
+  {
+    "estado": "Lara",
+    "municipios": [
+      { "municipio": "Iribarren", "parroquias": ["Catedral", "Concepcion", "El Cuji", "Santa Rosa", "Union"] }
+    ]
+  },
+  {
+    "estado": "Falcon",
+    "municipios": [
+      { "municipio": "Carirubana", "parroquias": ["Norte", "Carirubana", "Santa Ana", "Punta Cardon"] }
+    ]
+  },
+  {
+    "estado": "Carabobo",
+    "municipios": [
+      { "municipio": "Valencia", "parroquias": ["Candelaria", "Catedral", "El Socorro", "Miguel Pena", "San Jose"] }
+    ]
+  },
+  {
+    "estado": "Aragua",
+    "municipios": [
+      { "municipio": "Girardot", "parroquias": ["Andres Eloy Blanco", "Joaquin Crespo", "Jose Casanova Godoy", "Las Delicias", "Madre Maria de San Jose"] }
+    ]
+  },
+  {
+    "estado": "Distrito Capital",
+    "municipios": [
+      { "municipio": "Libertador", "parroquias": ["Altagracia", "Candelaria", "Catedral", "El Recreo", "La Pastora", "San Pedro", "Sucre"] }
+    ]
+  },
+  {
+    "estado": "Miranda",
+    "municipios": [
+      { "municipio": "Guaicaipuro", "parroquias": ["Los Teques", "Altagracia de la Montana", "Cecilio Acosta", "Paracotos"] },
+      { "municipio": "Plaza", "parroquias": ["Guarenas"] },
+      { "municipio": "Zamora", "parroquias": ["Guatire", "Bolivar"] }
+    ]
+  },
+  {
+    "estado": "Barinas",
+    "municipios": [
+      { "municipio": "Barinas", "parroquias": ["Alto Barinas", "Barinas", "Corazon de Jesus", "Ramon Ignacio Mendez"] }
+    ]
+  },
+  {
+    "estado": "Monagas",
+    "municipios": [
+      { "municipio": "Maturin", "parroquias": ["Alto de Los Godos", "Boqueron", "Las Cocuizas", "San Simon"] }
+    ]
+  },
+  {
+    "estado": "Anzoategui",
+    "municipios": [
+      { "municipio": "Simon Bolivar", "parroquias": ["Barcelona", "Bergantin", "Caigua", "El Carmen"] }
+    ]
+  },
+  {
+    "estado": "Sucre",
+    "municipios": [
+      { "municipio": "Sucre", "parroquias": ["Altagracia", "Ayacucho", "Santa Ines", "Valentin Valiente"] }
+    ]
+  },
+  {
+    "estado": "Nueva Esparta",
+    "municipios": [
+      { "municipio": "Marino", "parroquias": ["Porlamar"] }
+    ]
+  },
+  {
+    "estado": "Bolivar",
+    "municipios": [
+      { "municipio": "Caroni", "parroquias": ["Cachamay", "Chirica", "Dalla Costa", "Unare", "Universidad"] }
+    ]
+  }
+]

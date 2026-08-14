@@ -3,14 +3,30 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "environment": "development"
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "environment": "preview"
     },
     "production": {
-      "channel": "production"
+      "channel": "production",
+      "environment": "production"
     }
   },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./credentials/google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "leonardoduam@gmail.com",
+        "ascAppId": "<APP_STORE_CONNECT_APP_ID>",
+        "appleTeamId": "<APPLE_TEAM_ID>"
+      }
+    }
+  }
 }

@@ -1,7 +1,6 @@
 // Lazy-loaded via next/dynamic (ssr: false) — never import directly.
 // Prefetched via requestIdleCallback in pages/index.tsx after initial paint.
 
-import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';

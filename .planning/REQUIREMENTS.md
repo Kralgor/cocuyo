@@ -9,45 +9,45 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Status Display
 
-- [ ] **STAT-01**: User can view real-time outage status for any zone
-- [ ] **STAT-02**: User can see how long a zone has been without power
-- [ ] **STAT-03**: User can view cached status data when offline, with visible staleness indicator
-- [ ] **STAT-04**: User can view outage history for their zone and see estimated return time based on past patterns
+- [x] **STAT-01**: User can view real-time outage status for any zone
+- [x] **STAT-02**: User can see how long a zone has been without power
+- [x] **STAT-03**: User can view cached status data when offline, with visible staleness indicator
+- [x] **STAT-04**: User can view outage history for their zone and see estimated return time based on past patterns
 
 ### Reporting
 
-- [ ] **REPT-01**: User can submit an outage report with their zone auto-detected via GPS
-- [ ] **REPT-02**: User can manually select their zone if GPS is denied or unavailable
-- [ ] **REPT-03**: User can submit reports while offline, queued and synced when connectivity returns
+- [x] **REPT-01**: User can submit an outage report with their zone auto-detected via GPS
+- [x] **REPT-02**: User can manually select their zone if GPS is denied or unavailable
+- [x] **REPT-03**: User can submit reports while offline, queued and synced when connectivity returns
 
 ### Notifications
 
 - [ ] **NOTF-01**: User receives push notification when power goes out in their zone
 - [ ] **NOTF-02**: User receives push notification when power is restored in their zone
-- [ ] **NOTF-03**: User receives push notification when food items approach spoilage limits
+- [x] **NOTF-03**: User receives push notification when food items approach spoilage limits
 - [ ] **NOTF-04**: User receives push notification when neighboring zones have outages (early warning)
 
 ### Food Safety
 
-- [ ] **FOOD-01**: User can view pre-built list of common Venezuelan foods with spoilage times
-- [ ] **FOOD-02**: User can add custom food items with their own spoilage thresholds
-- [ ] **FOOD-03**: Food timers auto-start when an outage is detected in user's zone
-- [ ] **FOOD-04**: User receives local notification when a food item is approaching its spoilage limit
+- [x] **FOOD-01**: User can view pre-built list of common Venezuelan foods with spoilage times
+- [x] **FOOD-02**: User can add custom food items with their own spoilage thresholds
+- [x] **FOOD-03**: Food timers auto-start when an outage is detected in user's zone
+- [x] **FOOD-04**: User receives local notification when a food item is approaching its spoilage limit
 
 ### Trust & Privacy
 
-- [ ] **TRST-01**: User sees trust onboarding screen on first launch explaining open source status, anonymity, and non-government affiliation
-- [ ] **TRST-02**: User can access persistent privacy and open-source section in app settings with GitHub link
+- [x] **TRST-01**: User sees trust onboarding screen on first launch explaining open source status, anonymity, and non-government affiliation
+- [x] **TRST-02**: User can access persistent privacy and open-source section in app settings with GitHub link
 
 ### Sharing
 
-- [ ] **SHAR-01**: User can share outage status to WhatsApp with one tap (pre-formatted Spanish text)
+- [x] **SHAR-01**: User can share outage status to WhatsApp with one tap (pre-formatted Spanish text)
 
 ### Battery & Accessibility
 
-- [ ] **BATT-01**: User can enable AMOLED true-black dark mode for battery conservation
-- [ ] **BATT-02**: App automatically reduces refresh frequency when device battery drops below 20%
-- [ ] **BATT-03**: User can view emergency contacts (utility company, emergency services) for their zone
+- [x] **BATT-01**: User can enable AMOLED true-black dark mode for battery conservation
+- [x] **BATT-02**: App automatically reduces refresh frequency when device battery drops below 20%
+- [x] **BATT-03**: User can view emergency contacts (utility company, emergency services) for their zone
 
 ### Platform
 
@@ -100,35 +100,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAT-01 | Phase 1 | Pending |
-| STAT-02 | Phase 1 | Pending |
-| STAT-03 | Phase 1 | Pending |
-| STAT-04 | Phase 5 | Pending |
-| REPT-01 | Phase 2 | Pending |
-| REPT-02 | Phase 2 | Pending |
-| REPT-03 | Phase 2 | Pending |
-| NOTF-01 | Phase 3 | Pending |
-| NOTF-02 | Phase 3 | Pending |
-| NOTF-03 | Phase 4 | Pending |
-| NOTF-04 | Phase 3 | Pending |
-| FOOD-01 | Phase 4 | Pending |
-| FOOD-02 | Phase 4 | Pending |
-| FOOD-03 | Phase 4 | Pending |
-| FOOD-04 | Phase 4 | Pending |
-| TRST-01 | Phase 1 | Pending |
-| TRST-02 | Phase 1 | Pending |
-| SHAR-01 | Phase 2 | Pending |
-| BATT-01 | Phase 2 | Pending |
-| BATT-02 | Phase 2 | Pending |
-| BATT-03 | Phase 2 | Pending |
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
-| PLAT-04 | Phase 5 | Pending |
-| PLAT-05 | Phase 5 | Pending |
-| INFR-01 | Phase 3 | Pending |
-| INFR-02 | Phase 3 | Pending |
-| INFR-03 | Phase 3 | Pending |
+| STAT-01 | Phase 1 | Complete |
+| STAT-02 | Phase 1 | Complete |
+| STAT-03 | Phase 1 | Complete |
+| STAT-04 | Phase 5 | Complete (code) — on-device visual check pending |
+| REPT-01 | Phase 2 | Complete |
+| REPT-02 | Phase 2 | Complete |
+| REPT-03 | Phase 2 | Complete |
+| NOTF-01 | Phase 3 | Pending (device UAT) |
+| NOTF-02 | Phase 3 | Pending (device UAT) |
+| NOTF-03 | Phase 4 | Complete |
+| NOTF-04 | Phase 3 | Pending (device UAT) |
+| FOOD-01 | Phase 4 | Complete |
+| FOOD-02 | Phase 4 | Complete |
+| FOOD-03 | Phase 4 | Complete |
+| FOOD-04 | Phase 4 | Complete |
+| TRST-01 | Phase 1 | Complete |
+| TRST-02 | Phase 1 | Complete |
+| SHAR-01 | Phase 2 | Complete |
+| BATT-01 | Phase 2 | Complete |
+| BATT-02 | Phase 2 | Complete |
+| BATT-03 | Phase 2 | Complete |
+| PLAT-01 | Phase 1 | Pending (Android preview APK built; store build human-gated) |
+| PLAT-02 | Phase 1 | Pending (Apple Dev Program blocked) |
+| PLAT-03 | Phase 1 | Complete (EAS Update URL configured) |
+| PLAT-04 | Phase 5 | Pending (human gate: Play Console) |
+| PLAT-05 | Phase 5 | Pending (human gate: Apple Dev Program) |
+| INFR-01 | Phase 3 | Pending (device UAT) |
+| INFR-02 | Phase 3 | Pending (device UAT) |
+| INFR-03 | Phase 3 | Pending (device UAT) |
 
 **Coverage:**
 - v1 requirements: 29 total

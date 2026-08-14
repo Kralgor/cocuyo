@@ -86,7 +86,7 @@ Paste into Supabase Dashboard → SQL Editor and run once.
 outage_reports columns:
 - id, created_at — auto
 - region, status — required user input; status CHECK IN ('no_power','power_back','unstable')
-- lat, lon, onset_type, symptom, device_fingerprint, city_freetext — optional user input
+- lat, lon, onset_type, symptom, device_fingerprint, city_freetext, parroquia — optional user input
 - ip_hash — TRIGGER-computed, never client-supplied; anon has no INSERT grant on this column
 - state — pipeline-derived (REGION_TO_STATE in regions.py), not user input
 - sub_zone, duration_min — null Phase 1-2; server-side only
@@ -108,7 +108,7 @@ outage_history + active_outages: see docs/schema.sql for full DDL.
 | active_outages | no access | full access |
 
 anon INSERT columns (GRANT-level restriction, not just policy):
-  region, lat, lon, status, onset_type, symptom, device_fingerprint, city_freetext
+  region, lat, lon, status, onset_type, symptom, device_fingerprint, city_freetext, parroquia
 
 Server-side only (no anon grant): ip_hash, state, sub_zone, duration_min, confirmed_by_passive
 
@@ -286,3 +286,26 @@ caracas, maracaibo, valencia, barquisimeto, maracay,
 ciudad_guayana, san_cristobal, merida, barinas,
 maturin, cumana, punto_fijo, los_teques, porlamar,
 barcelona, guarenas_guatire, valera
+## Phase 3 Push Fan-Out
+
+### Component Responsibilities
+
+| Component | Responsibility |
+| --- | --- |
+| `push_tokens` | Anonymous device subscriptions. Mobile writes with the anon key; pipeline reads with service_role. |
+| `notification_log` | Service-role-only cooldown, receipt, and Expo ticket tracking for sent notifications. |
+| `pipeline/notify.py` | Push fan-out worker. Converts lifecycle events into Expo Push API messages and records notification_log rows. |
+
+### Data Flow
+
+`process_lifecycle()` returns new outages and restorations. `pipeline/notify.py`
+reads matching `push_tokens` with the service_role key, expands saved-zone neighbor
+notifications through `ADJACENCY_MAP`, sends batches to the Expo Push API, and
+writes `notification_log` for cooldown and delivery tracking.
+
+### Boundary
+
+The ADR-007 two-key boundary stays intact: mobile clients can INSERT/UPDATE
+`push_tokens` with the anon key, but only the pipeline service_role reads tokens
+and writes `notification_log`. Fan-out happens pipeline-side and does not add a
+read server to the static JSON app surface.
