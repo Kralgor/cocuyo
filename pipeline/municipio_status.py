@@ -65,6 +65,18 @@ _SATELLITE_TO_STATUS: dict[str, str] = {
 }
 
 
+def _score_to_classification(score: float) -> str:
+    """Inverse of the satellite score map (collector_viirs._STATUS_TO_SCORE):
+    0.9 major, 0.6 partial, 0.4 degraded, else normal."""
+    if score >= 0.85:
+        return "major_outage"
+    if score >= 0.55:
+        return "partial_outage"
+    if score >= 0.30:
+        return "degraded"
+    return "normal"
+
+
 def region_for_state(state: str) -> Optional[str]:
     """Region key covering a state, or None when the state has no region."""
     return _STATE_TO_REGION.get(state)
@@ -173,9 +185,12 @@ def build_municipios_payload(
             if satellite_by_municipio is not None:
                 own = satellite_by_municipio.get((state, m["name"]))
             if own is None and region_entry is not None:
+                # own sample missing (clouds) — inherit the state region's
+                # satellite score, mapped back to its classification so a
+                # state-wide outage is not masked as normal.
                 sat = region_entry.get("signals", {}).get("satellite")
                 if sat is not None:
-                    own = {"status": "normal", "score": sat}
+                    own = {"status": _score_to_classification(sat), "score": sat}
             entry = derive_municipio_entry(m, region_entry, own)
             entry["state"] = state
             state_entries.append(entry)
