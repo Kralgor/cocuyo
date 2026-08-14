@@ -1,12 +1,15 @@
 // Lazy-loaded via next/dynamic (ssr: false) — never import directly.
 // Prefetched via requestIdleCallback in pages/index.tsx after initial paint.
 
-import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, CircleMarker, Tooltip, useMap } from 'react-leaflet';
+import { useEffect, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { RegionEntry } from '../lib/api';
+import type { RegionEntry, MunicipioEntry } from '../lib/api';
 import type { Theme } from '../lib/theme';
 import { statusColor } from '../lib/theme';
+import { aggregateStates, isOutageStatus } from '../lib/municipios';
+import { ALL_REGIONS } from './mobile/RegionPicker';
 
 // ── Region coordinates (mirrors pipeline/regions.py) ─────────────────────────
 const REGION_COORDS: Record<string, [number, number]> = {
@@ -29,6 +32,12 @@ const REGION_COORDS: Record<string, [number, number]> = {
   ciudad_guayana:    [ 8.3667, -62.6500],
 };
 
+// state display name → region key (first region per state; mirrors pipeline)
+const STATE_TO_REGION: Record<string, string> = {};
+for (const r of ALL_REGIONS) {
+  if (!(r.state in STATE_TO_REGION)) STATE_TO_REGION[r.state] = r.key;
+}
+
 const MOCK_REGIONS: Record<string, RegionEntry> = Object.fromEntries(
   Object.keys(REGION_COORDS).map(key => [key, {
     display_name:        key.replace(/_/g, ' '),
@@ -41,6 +50,28 @@ const MOCK_REGIONS: Record<string, RegionEntry> = Object.fromEntries(
     rationing_pattern:   null,
   }])
 );
+
+// Zoom threshold: below it the map shows one aggregate circle per state;
+// at or above it, the state breaks down into municipio markers.
+const MUNICIPIO_ZOOM = 8;
+
+// ── short status labels (ES — matches app copy) ──────────────────────────────
+const STATUS_LABEL: Record<string, string> = {
+  no_power:            'SIN LUZ',
+  power_back:          'CON LUZ',
+  unstable:            'INESTABLE',
+  normal:              'NORMAL',
+  no_data:             'SIN DATOS',
+  confirmed_outage:    'APAGÓN',
+  likely_outage:       'POSIBLE APAGÓN',
+  at_risk:             'EN RIESGO',
+  degraded:            'DEGRADADO',
+  unverified_reports:  'REPORTES SIN VERIFICAR',
+};
+
+function statusLabel(status: string): string {
+  return STATUS_LABEL[status] ?? status.replace(/_/g, ' ').toUpperCase();
+}
 
 // ── Firefly DivIcon ───────────────────────────────────────────────────────────
 function fireflyIcon(color: string, pulse: boolean): L.DivIcon {
@@ -77,37 +108,116 @@ function TileLayerUpdater({ url, attribution }: { url: string; attribution: stri
   return <TileLayer key={url} url={url} attribution={attribution} />;
 }
 
+// ── zoom watcher — switches between state circles and municipios ──────────────
+function ZoomWatcher({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const sync = () => onZoomChange(map.getZoom());
+    sync();
+    map.on('zoomend', sync);
+    return () => { map.off('zoomend', sync); };
+  }, [map, onZoomChange]);
+  return null;
+}
+
 // ── Map props ─────────────────────────────────────────────────────────────────
 interface MapProps {
   regions?:      Record<string, RegionEntry>;
+  municipios?:   Record<string, MunicipioEntry[]>;
   theme:         Theme;
   onMarkerTap?:  (regionKey: string) => void;
   fillHeight?:   boolean;
 }
 
-export default function Map({ regions = MOCK_REGIONS, theme: t, onMarkerTap, fillHeight = false }: MapProps) {
-  const hasOutage = (status: string) =>
-    status === 'unverified_reports' ||
-    status === 'likely_outage'      ||
-    status === 'confirmed_outage';
+export default function Map({
+  regions = MOCK_REGIONS, municipios, theme: t, onMarkerTap, fillHeight = false,
+}: MapProps) {
+  const [zoom, setZoom] = useState(6);
+  const showMunicipios = zoom >= MUNICIPIO_ZOOM;
+  const states = municipios ? aggregateStates(municipios) : [];
+
+  const selectState = (state: string) => {
+    const regionKey = STATE_TO_REGION[state];
+    if (regionKey && onMarkerTap) onMarkerTap(regionKey);
+  };
 
   return (
-    <MapContainer
-      center={[8.5, -66.0]}
-      zoom={6}
-      style={{ height: fillHeight ? '100%' : '440px', width: '100%', background: t.bg }}
-      scrollWheelZoom={false}
-      zoomControl={true}
-    >
-      <TileLayerUpdater url={t.tileUrl} attribution={t.tileAttr} />
+    <div style={{ position: 'relative', width: '100%', height: fillHeight ? '100%' : '440px' }}>
+      <MapContainer
+        center={[8.5, -66.0]}
+        zoom={6}
+        minZoom={5}
+        maxZoom={12}
+        style={{ height: '100%', width: '100%', background: t.bg }}
+        scrollWheelZoom={false}
+        zoomControl={true}
+      >
+        <TileLayerUpdater url={t.tileUrl} attribution={t.tileAttr} />
+        <ZoomWatcher onZoomChange={setZoom} />
 
+      {!showMunicipios && states.map((s) => {
+        const color = statusColor(s.status, t);
+        const selectable = Boolean(STATE_TO_REGION[s.state]);
+        return (
+          <Circle
+            key={s.state}
+            center={s.centroid}
+            radius={55000}
+            pathOptions={{
+              color,
+              weight: 2,
+              fillColor: color,
+              fillOpacity: 0.30,
+            }}
+            eventHandlers={selectable && onMarkerTap ? { click: () => selectState(s.state) } : {}}
+          >
+            <Tooltip direction="top" offset={[0, -8]}>
+              <span style={{ fontFamily: 'system-ui', fontSize: 12 }}>
+                <strong>{s.state}</strong> · {statusLabel(s.status)}
+                <br />
+                <span style={{ opacity: 0.7 }}>{s.municipioCount} municipios</span>
+                <br />
+                <span style={{ opacity: 0.55 }}>Haz zoom para ver municipios</span>
+              </span>
+            </Tooltip>
+          </Circle>
+        );
+      })}
+
+      {showMunicipios && municipios && Object.entries(municipios).map(([state, entries]) =>
+        entries.map((m) => {
+          const color = statusColor(m.status, t);
+          const outage = isOutageStatus(m.status);
+          const selectable = Boolean(STATE_TO_REGION[state]);
+          return (
+            <CircleMarker
+              key={`${state}-${m.name}`}
+              center={[m.lat, m.lon]}
+              radius={outage ? 7 : 5}
+              pathOptions={{
+                color: t.bg,
+                weight: 1.5,
+                fillColor: color,
+                fillOpacity: outage ? 0.95 : 0.75,
+              }}
+              eventHandlers={selectable && onMarkerTap ? { click: () => selectState(state) } : {}}
+            >
+              <Tooltip direction="top" offset={[0, -6]}>
+                <span style={{ fontFamily: 'system-ui', fontSize: 12 }}>
+                  <strong>{m.name}</strong> ({state}) · {statusLabel(m.status)}
+                </span>
+              </Tooltip>
+            </CircleMarker>
+          );
+        })
+      )}
+
+      {/* region-city markers — the app's selectable data model */}
       {Object.entries(regions).map(([key, data]) => {
         const coords = REGION_COORDS[key];
         if (!coords) return null;
-
         const color  = statusColor(data.status, t);
-        const pulse  = hasOutage(data.status);
-
+        const pulse  = ['unverified_reports', 'likely_outage', 'confirmed_outage'].includes(data.status);
         return (
           <Marker
             key={key}
@@ -126,6 +236,24 @@ export default function Map({ regions = MOCK_REGIONS, theme: t, onMarkerTap, fil
           </Marker>
         );
       })}
-    </MapContainer>
+      </MapContainer>
+
+      {/* view-mode indicator */}
+      {municipios && (
+        <div
+          data-testid="map-mode"
+          style={{
+            position: 'absolute', top: 10, right: 10, zIndex: 1000,
+            background: t.panel, border: `0.5px solid ${t.line}`,
+            borderRadius: 6, padding: '4px 10px',
+            fontFamily: 'var(--font-mono)', fontSize: 10,
+            letterSpacing: '0.06em', color: t.inkDim,
+            pointerEvents: 'none',
+          }}
+        >
+          {showMunicipios ? 'MUNICIPIOS · zoom ' + zoom : 'ESTADOS · zoom ' + zoom}
+        </div>
+      )}
+    </div>
   );
 }

@@ -260,6 +260,70 @@ def score_region(
     }
 
 
+# ── municipio layer ────────────────────────────────────────────────────────────
+
+def _compute_municipio_satellite(
+    now: datetime,
+    fetch_fn=None,
+) -> dict[tuple[str, str], float]:
+    """
+    VIIRS radiance sampled at every municipio's OWN centroid (publication
+    window only). Returns {(state, municipio_name): satellite_score}.
+
+    Ratio vs the state's region baseline (the state's grid baseline is the
+    best proxy available per municipio); states without a region have no
+    baseline and contribute no satellite signal (honest no_data).
+    """
+    from pipeline.collector_viirs import (
+        BASELINE_RADIANCE,
+        classify_ratio,
+        fetch_municipio_radiance as _default_fetch,
+    )
+    from pipeline.municipio_status import region_for_state
+    from pipeline.municipios import MUNICIPIOS, STATE_ORDER
+
+    fetch = fetch_fn or _default_fetch
+
+    points: list[tuple[float, float]] = []
+    point_to_key: dict[tuple[float, float], tuple[str, str]] = {}
+    for state in STATE_ORDER:
+        baseline = BASELINE_RADIANCE.get(region_for_state(state) or "")
+        if baseline is None:
+            continue  # no reference baseline — no satellite signal for this state
+        for m in MUNICIPIOS.get(state, []):
+            pt = (m["lat"], m["lon"])
+            points.append(pt)
+            point_to_key[pt] = (state, m["name"])
+
+    radiance = fetch(points, now=now)
+
+    out: dict[tuple[str, str], float] = {}
+    for pt, key in point_to_key.items():
+        observed = radiance.get(pt)
+        if observed is None:
+            continue  # cloud-heavy or no granule — absent != zero (ADR-009)
+        state, _ = key
+        baseline = BASELINE_RADIANCE.get(region_for_state(state) or "")
+        if baseline is None or baseline <= 0:
+            continue
+        ratio = observed / baseline
+        status = classify_ratio(ratio)
+        out[key] = _STATUS_TO_SCORE_MUNICIPIO[status]
+
+    logger.info("municipio VIIRS: %d/%d municipios with own satellite sample",
+                len(out), sum(len(MUNICIPIOS.get(s, [])) for s in STATE_ORDER))
+    return out
+
+
+# ratio status -> score, matching collector_viirs._STATUS_TO_SCORE
+_STATUS_TO_SCORE_MUNICIPIO = {
+    "major_outage": 0.90,
+    "partial_outage": 0.60,
+    "degraded": 0.40,
+    "normal": 0.10,
+}
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def build_status_json(
@@ -267,9 +331,10 @@ def build_status_json(
     phase: int,
     collector_errors: int,
     regions: dict[str, dict],
+    municipios: dict | None = None,
 ) -> dict:
     next_update = now + timedelta(minutes=_UPDATE_INTERVAL_MIN)
-    return {
+    doc: dict = {
         "updated_at":         now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "phase":              phase,
         "scheduler":          "github-actions",
@@ -277,6 +342,9 @@ def build_status_json(
         "collector_errors":   collector_errors,
         "regions":            regions,
     }
+    if municipios:
+        doc["municipios"] = municipios
+    return doc
 
 
 def run(now: datetime | None = None) -> dict:
@@ -345,7 +413,29 @@ def run(now: datetime | None = None) -> dict:
         except Exception as exc:
             logger.warning("notify fan-out failed (non-fatal): %s", exc)
 
-    return build_status_json(now, phase, collector_errors, region_output)
+    # Municipio layer — each municipio gets its own status entry (Phase 2+).
+    # Satellite is sampled at the municipio's own centroid; internet/weather/
+    # crowd are attributed from the state's region. Failures never break the
+    # main cycle — the region layer keeps the core service alive.
+    municipios_section: dict = {}
+    if phase >= 2:
+        try:
+            from pipeline.municipio_status import build_municipios_payload
+
+            satellite_by_municipio = _compute_municipio_satellite(now)
+            municipios_section = build_municipios_payload(
+                region_output, satellite_by_municipio
+            )
+            logger.info("municipio layer: %d states, %d municipios",
+                        len(municipios_section),
+                        sum(len(v) for v in municipios_section.values()))
+        except Exception as exc:
+            logger.error("municipio layer failed: %s", exc)
+            collector_errors += 1
+
+    return build_status_json(
+        now, phase, collector_errors, region_output, municipios_section
+    )
 
 
 def main() -> None:

@@ -169,6 +169,7 @@ const Home: NextPage = () => {
         return (
           <Map
             regions={status?.regions}
+            municipios={status?.municipios}
             theme={t}
             onMarkerTap={handleMarkerTap}
           />
@@ -254,6 +255,7 @@ const Home: NextPage = () => {
           <div className="desktop-map-pane">
             <Map
               regions={status?.regions}
+              municipios={status?.municipios}
               theme={t}
               onMarkerTap={handleMarkerTap}
               fillHeight
