@@ -101,9 +101,33 @@ class TestDeriveMunicipioEntry:
     def test_region_signals_fill_in_when_satellite_absent(self):
         entry = derive_municipio_entry(VALENCIA_MUNI, CARABOBO_REGION, None)
         assert entry["signals"]["internet"] == pytest.approx(0.05)
-        assert entry["signals"]["crowdsource"] == pytest.approx(0.02)
+        # crowd is per-municipio (v3) — not attributed from the region
+        assert entry["signals"]["crowdsource"] is None
         assert entry["signals"]["weather"] == pytest.approx(0.1)
         assert entry["signals"]["satellite"] is None
+        assert entry["status"] == "normal"
+
+    def test_crowd_quorum_decides_status(self):
+        # crowd reports are ground truth: strong crowd + quiet region reads
+        # at_risk+ (blend path) even with no satellite sample — versus the
+        # satellite-dominant path which would read normal
+        entry = derive_municipio_entry(
+            VALENCIA_MUNI, CARABOBO_REGION, None,
+            crowd={"crowd_score": 0.8, "crowd_count": 5},
+        )
+        assert entry["signals"]["crowdsource"] == pytest.approx(0.8)
+        assert entry["crowd_reports_30min"] == 5
+        assert entry["status"] in ("confirmed_outage", "likely_outage", "at_risk")
+
+    def test_crowd_below_quorum_leaves_satellite_dominant(self):
+        # crowd_count without a score (below quorum) does not fabricate a signal
+        entry = derive_municipio_entry(
+            VALENCIA_MUNI, CARABOBO_REGION,
+            {"status": "normal", "score": 0.1, "ratio": 0.95},
+            crowd={"crowd_score": None, "crowd_count": 1},
+        )
+        assert entry["signals"]["crowdsource"] is None
+        assert entry["crowd_reports_30min"] == 1
         assert entry["status"] == "normal"
 
     def test_region_less_state_is_honest_no_data(self):
