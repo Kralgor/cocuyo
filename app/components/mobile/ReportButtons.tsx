@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Theme } from '../../lib/theme';
 import { tt, Lang } from '../../lib/i18n';
 import { submitReport, getRecentCount } from '../../lib/api';
+import { getRegion } from './RegionPicker';
+import { loadParroquias, getMunicipios, getParroquias } from '../../lib/parroquias';
+import type { ParroquiaDataset } from '../../lib/parroquias';
 
 const LAST_REPORT_KEY = 'cocuyo_last_report';
 const UNDO_SECONDS    = 60;
@@ -45,6 +48,24 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const undoRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const coolRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [parrData, setParrData]     = useState<ParroquiaDataset[] | null>(null);
+  const [municipio, setMunicipio]   = useState('');
+  const [parroquia, setParroquia]   = useState('');
+
+  // parroquia dataset for the selected region's state (loaded lazily)
+  const state = getRegion(regionKey)?.state ?? '';
+  useEffect(() => {
+    let mounted = true;
+    loadParroquias().then(data => { if (mounted) setParrData(data); });
+    return () => { mounted = false; };
+  }, []);
+  const munis = parrData ? getMunicipios(parrData, state) : [];
+  const parr = municipio ? getParroquias(parrData ?? [], state, municipio) : [];
+
+  function resetParroquia() {
+    setMunicipio('');
+    setParroquia('');
+  }
 
   useEffect(() => () => {
     if (undoRef.current) clearInterval(undoRef.current);
@@ -76,9 +97,11 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
         lat,
         lon,
         city_freetext: null,
+        parroquia:     parroquia || null,
       });
 
       saveLastReport({ region: regionKey, status: statusKey, timestamp: Date.now() });
+      resetParroquia();
 
       // Fetch social proof count (non-blocking)
       const count = await getRecentCount(regionKey);
@@ -228,6 +251,42 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Optional parroquia refinement — per-municipio crowd granularity */}
+        {munis.length > 0 && (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <select
+              style={{
+                flex: 1, padding: '7px 8px', borderRadius: 6,
+                background: t.panel, color: t.inkDim,
+                border: `0.5px solid ${t.line}`, fontSize: 11,
+                fontFamily: 'var(--font-mono)', maxWidth: 160,
+              }}
+              value={municipio}
+              onChange={(e) => { setMunicipio(e.target.value); setParroquia(''); }}
+              disabled={isSubmitting}
+            >
+              <option value="">{lang === 'es' ? 'Municipio…' : 'Municipality…'}</option>
+              {munis.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+            {municipio && (
+              <select
+                style={{
+                  flex: 1, padding: '7px 8px', borderRadius: 6,
+                  background: t.panel, color: t.inkDim,
+                  border: `0.5px solid ${t.line}`, fontSize: 11,
+                  fontFamily: 'var(--font-mono)', maxWidth: 180,
+                }}
+                value={parroquia}
+                onChange={(e) => setParroquia(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">{lang === 'es' ? 'Parroquia…' : 'Parish…'}</option>
+                {parr.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            )}
+          </div>
+        )}
+
         {/* Primary: No tengo luz */}
         <button
           onClick={() => handleReport('no_power')}
