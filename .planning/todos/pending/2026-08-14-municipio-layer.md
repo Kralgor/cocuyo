@@ -38,9 +38,12 @@
 
 - [x] Adaptive per-municipio baselines (EMA, R2-persisted) — DONE 2026-08-14
 - [x] Satellite-dominant status rule — DONE 2026-08-14
+- [x] Per-municipio crowd reports — DONE 2026-08-14: 899 parroquias mapped to
+      municipios (Wikipedia), pipeline crowd aggregation with quorum discipline,
+      web cascading picker in ReportButtons, mobile dataset replaced (22 states)
 - [ ] Per-municipio weather sampling (NASA POWER point queries per municipio; watch API
       rate limits at 332 points/10min)
-- [ ] Per-municipio crowd reports: map report `parroquia` field → municipio (mobile
-      parroquias.json covers 18 municipios today; needs full dataset)
+- [ ] Complete parroquia coverage for Mérida + Apure (no Wikipedia anexo; per-municipio
+      pages are inconsistent) — currently region fallback
 - [ ] State boundaries as actual polygons (currently circles at centroids)
 - [ ] Validate the first real VIIRS per-municipio run (publication window 06:00-08:00 UTC)
