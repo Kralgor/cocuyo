@@ -1,6 +1,7 @@
 /**
  * Tests for mobile/lib/regions.ts — filterSections() + REGIONS registry
- * Covers: 17 region keys, state grouping, search filtering
+ * Covers: 25 region keys (17 original + 8 state capitals added 2026-08-15),
+ * state grouping, search filtering
  */
 
 import { filterSections, REGIONS, ZONE_SECTIONS } from '../../lib/regions';
@@ -8,8 +9,8 @@ import { filterSections, REGIONS, ZONE_SECTIONS } from '../../lib/regions';
 // ── REGIONS registry ───────────────────────────────────────────────────────────
 
 describe('REGIONS', () => {
-  it('contains exactly 17 regions', () => {
-    expect(Object.keys(REGIONS)).toHaveLength(17);
+  it('contains exactly 25 regions', () => {
+    expect(Object.keys(REGIONS)).toHaveLength(25);
   });
 
   it('contains ciudad_guayana', () => {
@@ -31,12 +32,27 @@ describe('REGIONS', () => {
     expect(REGIONS.maracaibo.lon).toBeCloseTo(-71.6125);
   });
 
-  it('contains all 17 expected keys', () => {
+  it('covers the 8 state-capital regions added 2026-08-15', () => {
+    const added = [
+      'guanare', 'san_felipe', 'san_carlos', 'san_juan_de_los_morros',
+      'san_fernando_de_apure', 'puerto_ayacucho', 'tucupita', 'la_guaira',
+    ];
+    for (const key of added) {
+      expect(REGIONS[key]).toBeDefined();
+      expect(REGIONS[key].state).toBeTruthy();
+    }
+    expect(REGIONS.guanare.state).toBe('Portuguesa');
+    expect(REGIONS.la_guaira.state).toBe('La Guaira');
+  });
+
+  it('contains all 25 expected keys', () => {
     const expectedKeys = [
       'maracaibo', 'san_cristobal', 'merida', 'valera', 'barquisimeto',
       'punto_fijo', 'valencia', 'maracay', 'caracas', 'los_teques',
       'guarenas_guatire', 'barinas', 'maturin', 'barcelona', 'cumana',
       'porlamar', 'ciudad_guayana',
+      'guanare', 'san_felipe', 'san_carlos', 'san_juan_de_los_morros',
+      'san_fernando_de_apure', 'puerto_ayacucho', 'tucupita', 'la_guaira',
     ];
     for (const key of expectedKeys) {
       expect(REGIONS[key]).toBeDefined();
@@ -63,9 +79,9 @@ describe('ZONE_SECTIONS', () => {
     expect(miranda?.data).toContain('guarenas_guatire');
   });
 
-  it('covers all 17 region keys', () => {
+  it('covers all 25 region keys', () => {
     const allKeys = ZONE_SECTIONS.flatMap(s => s.data);
-    expect(allKeys).toHaveLength(17);
+    expect(allKeys).toHaveLength(25);
   });
 });
 

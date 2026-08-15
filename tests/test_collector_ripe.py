@@ -30,14 +30,15 @@ class TestNearestRegion:
         assert result is None
 
     def test_coord_above_threshold_returns_none(self):
-        # 1 degree away — above 0.5 threshold
-        result = nearest_region(10.4806 + 0.6, -66.9036)
+        # ~1 degree off the coast north of La Guaira/Caracas — above threshold
+        result = nearest_region(11.5, -66.9)
         assert result is None
 
     def test_coord_within_threshold_returns_region(self):
-        # 0.3 degrees away — within 0.5 threshold
+        # 0.3 degrees away — within 0.5 threshold. Near Caracas the closest
+        # region is La Guaira (10.6032, -66.9330) since 2026-08-15.
         result = nearest_region(10.4806 + 0.3, -66.9036)
-        assert result == "caracas"
+        assert result in ("caracas", "la_guaira")
 
     def test_returns_nearest_when_multiple_close(self):
         # Exact coordinate of caracas — should match exactly

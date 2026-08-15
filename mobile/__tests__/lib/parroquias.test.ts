@@ -15,8 +15,9 @@ describe('parroquia and contacts assets', () => {
     // The dataset covers the urban-core municipios of every region state.
     // States without a parroquia anexo on Wikipedia (Mérida, Apure) fall back
     // to region-level reporting — reports are never lost, just coarser.
+    const uncovered = new Set(['merida', 'apure']);
     for (const state of expectedStates) {
-      expect(assetStates.has(state) || state === normalize('Mérida')).toBe(true);
+      expect(assetStates.has(state) || uncovered.has(state)).toBe(true);
     }
   });
 
