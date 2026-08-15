@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { submitReport, getRecentCount } from '../lib/api';
+import { getRegion } from './mobile/RegionPicker';
+import { loadParroquias, getMunicipios, getParroquias } from '../lib/parroquias';
+import type { ParroquiaDataset } from '../lib/parroquias';
 
 // ── region list (mirrors pipeline/regions.py order) ───────────────────────────
 const REGIONS = [
@@ -32,7 +35,7 @@ const LAST_REPORT_KEY = 'cocuyo_last_report';
 const POWER_BACK_WINDOW_MS = 12 * 60 * 60 * 1000;
 
 // ── types ─────────────────────────────────────────────────────────────────────
-type Step = 'idle' | 'region' | 'unlisted' | 'status' | 'submitting' | 'done' | 'error';
+type Step = 'idle' | 'region' | 'unlisted' | 'parroquia' | 'status' | 'submitting' | 'done' | 'error';
 
 interface Gps { lat: number; lon: number }
 interface LastReport { region: string; displayName: string; status: string; ts: number }
@@ -72,10 +75,13 @@ export default function ReportButton() {
   const [displayName, setDisplayName] = useState<string>('');
   const [cityFreetext, setCityFreetext] = useState('');
   const [gps, setGps]                 = useState<Gps | null>(null);
-  const [, setStatus]               = useState<string | null>(null);
+  const [, setStatus]                 = useState<string | null>(null);
   const [recentCount, setRecentCount] = useState<number | null>(null);
   const [errorMsg, setErrorMsg]       = useState<string | null>(null);
   const [shortcut, setShortcut]       = useState<LastReport | null>(null);
+  const [parroquiaData, setParroquiaData] = useState<ParroquiaDataset[] | null>(null);
+  const [municipio, setMunicipio]     = useState<string>('');
+  const [parroquia, setParroquia]     = useState<string>('');
 
   // Check for power-back shortcut on mount
   useEffect(() => {
@@ -98,6 +104,8 @@ export default function ReportButton() {
     setStatus(null);
     setRecentCount(null);
     setErrorMsg(null);
+    setMunicipio('');
+    setParroquia('');
   }, []);
 
   // One-tap power-back shortcut
@@ -127,14 +135,20 @@ export default function ReportButton() {
     }
   }, [shortcut]);
 
-  // Step 1 → region selection
+  // Step 1 → region selection → optional parroquia refinement
   const handleSelectRegion = useCallback(async (key: string, name: string) => {
     setRegion(key);
     setDisplayName(name);
     const coords = await requestGps();
     setGps(coords);
-    setStep('status');
-  }, []);
+    // parroquia refinement step when the region's state has parroquia data
+    const data = parroquiaData ?? await loadParroquias();
+    if (!parroquiaData) setParroquiaData(data);
+    const state = getRegion(key)?.state;
+    setMunicipio('');
+    setParroquia('');
+    setStep(state && getMunicipios(data, state).length ? 'parroquia' : 'status');
+  }, [parroquiaData]);
 
   // Unlisted → status
   const handleUnlistedContinue = useCallback(async () => {
@@ -158,6 +172,7 @@ export default function ReportButton() {
         lat:           gps?.lat ?? null,
         lon:           gps?.lon ?? null,
         city_freetext: region === 'unlisted' ? displayName : null,
+        parroquia:     parroquia || null,
       });
       saveLastReport({ region, displayName, status: selectedStatus, ts: Date.now() });
       const count = await getRecentCount(region);
@@ -167,7 +182,7 @@ export default function ReportButton() {
       setErrorMsg('No se pudo enviar. Intenta de nuevo.');
       setStep('error');
     }
-  }, [region, displayName, gps]);
+  }, [region, displayName, gps, parroquia]);
 
   // ── render ────────────────────────────────────────────────────────────────
 
@@ -234,6 +249,43 @@ export default function ReportButton() {
           onClick={handleUnlistedContinue}
           disabled={!cityFreetext.trim()}
         >
+          Continuar
+        </button>
+        <button style={s.backBtn} onClick={reset}>Cancelar</button>
+      </div>
+    );
+  }
+
+  if (step === 'parroquia') {
+    const state = region ? (getRegion(region)?.state ?? '') : '';
+    const munis = getMunicipios(parroquiaData ?? [], state);
+    const parr = municipio ? getParroquias(parroquiaData ?? [], state, municipio) : [];
+    return (
+      <div style={s.card}>
+        <p style={s.label}>{displayName} — ¿Dónde exactamente? (opcional)</p>
+        <select
+          style={s.input}
+          value={municipio}
+          onChange={(e) => { setMunicipio(e.target.value); setParroquia(''); }}
+        >
+          <option value="">Municipio…</option>
+          {munis.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+        {municipio && (
+          <select
+            style={s.input}
+            value={parroquia}
+            onChange={(e) => setParroquia(e.target.value)}
+          >
+            <option value="">Parroquia…</option>
+            {parr.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        )}
+        <button style={{ ...s.btn, opacity: 1 }} onClick={() => setStep('status')}>
           Continuar
         </button>
         <button style={s.backBtn} onClick={reset}>Cancelar</button>

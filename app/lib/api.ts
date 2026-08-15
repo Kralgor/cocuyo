@@ -114,12 +114,14 @@ export async function submitReport(payload: {
   lat:           number | null;
   lon:           number | null;
   city_freetext: string | null;
+  parroquia?:    string | null;
 }): Promise<void> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
     method:  'POST',
     headers: HEADERS,
     body:    JSON.stringify({
       ...payload,
+      parroquia:          payload.parroquia ?? null,
       onset_type:         null,   // Phase 2+
       symptom:            null,   // Phase 2+
       device_fingerprint: null,   // ADR-005 deferred to Phase 4

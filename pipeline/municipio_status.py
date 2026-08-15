@@ -109,28 +109,43 @@ def derive_municipio_entry(
     municipio: Municipio,
     region_entry: Optional[dict],
     satellite: Optional[dict],
+    crowd: Optional[dict] = None,
 ) -> dict:
     """
-    Build one municipio's status entry from its own satellite observation
-    and the state's attributed region signals. Pure logic — no network.
+    Build one municipio's status entry. Pure logic — no network.
 
-    Status rule (v2 — satellite-dominant, per-municipio independent):
-      - When the municipio's OWN VIIRS sample exists (satellite passed),
-        its status comes from THAT observation: major_outage ->
-        confirmed_outage, partial_outage -> likely_outage, degraded ->
-        at_risk, normal -> normal. The municipio's lights ARE its status.
-      - When the own satellite is absent (clouds, outside the publication
-        window), region signals fill in via the weighted blend — and only
-        then does the municipio track its state.
+    Status rule (v3):
+      - Crowd quorum met (crowd passed with a score): the blended score
+        decides (crowd + own satellite + region internet/weather). People
+        reporting are ground truth; satellite corroborates.
+      - Otherwise, when the municipio's OWN VIIRS sample exists: its
+        status comes from THAT observation (major_outage ->
+        confirmed_outage, partial -> likely, degraded -> at_risk,
+        normal -> normal). The municipio's lights ARE its status.
+      - Otherwise: region signals via the weighted blend (fallback).
     """
+    crowd_score = (crowd or {}).get("crowd_score")
+    crowd_count = (crowd or {}).get("crowd_count", 0)
+
     signals = {
         "internet":    (region_entry or {}).get("signals", {}).get("internet") if region_entry else None,
         "satellite":   (satellite or {}).get("score"),
-        "crowdsource": (region_entry or {}).get("signals", {}).get("crowdsource") if region_entry else None,
+        "crowdsource": crowd_score,
         "weather":     (region_entry or {}).get("signals", {}).get("weather") if region_entry else None,
     }
 
-    if satellite and satellite.get("status"):
+    if crowd_score is not None:
+        # reports are ground truth — blend everything (scorer handles
+        # passive validation: crowd + satellite/internet -> threshold status)
+        scored = compute_region_score(
+            crowd_score=crowd_score,
+            internet_score=signals["internet"],
+            satellite_score=signals["satellite"],
+            weather_score=signals["weather"],
+        )
+        status = scored.status
+        current_score = scored.current_score
+    elif satellite and satellite.get("status"):
         # own observation decides — per-municipio independent
         status = _SATELLITE_TO_STATUS.get(
             satellite["status"],
@@ -139,7 +154,7 @@ def derive_municipio_entry(
         current_score = satellite.get("score", 0.0)
     else:
         scored = compute_region_score(
-            crowd_score=signals["crowdsource"],
+            crowd_score=None,
             internet_score=signals["internet"],
             satellite_score=signals["satellite"],
             weather_score=signals["weather"],
@@ -153,6 +168,7 @@ def derive_municipio_entry(
         "lon":  municipio["lon"],
         "current_score": round(current_score, 4),
         "status": status,
+        "crowd_reports_30min": crowd_count,
         "signals": {
             "internet":    _r(signals["internet"]),
             "satellite":   _r(signals["satellite"]),
@@ -166,6 +182,7 @@ def derive_municipio_entry(
 def build_municipios_payload(
     regions: dict[str, dict],
     satellite_by_municipio: Optional[dict[tuple[str, str], Optional[dict]]] = None,
+    crowd_by_municipio: Optional[dict[tuple[str, str], dict]] = None,
 ) -> dict:
     """
     Build the full "municipios" section from the per-region status payload.
@@ -174,6 +191,8 @@ def build_municipios_payload(
     satellite_by_municipio: optional {(state, muni_name): {"status", "score",
       "ratio"}} from the VIIRS sampler. Missing municipios fall back to the
       state region's own satellite entry when present, else no satellite.
+    crowd_by_municipio: optional {(state, muni_name): {"crowd_score",
+      "crowd_count"}} from the per-municipio crowd aggregation.
     """
     payload: dict[str, list[dict]] = {}
     for state in STATE_ORDER:
@@ -191,7 +210,10 @@ def build_municipios_payload(
                 sat = region_entry.get("signals", {}).get("satellite")
                 if sat is not None:
                     own = {"status": _score_to_classification(sat), "score": sat}
-            entry = derive_municipio_entry(m, region_entry, own)
+            crowd = None
+            if crowd_by_municipio is not None:
+                crowd = crowd_by_municipio.get((state, m["name"]))
+            entry = derive_municipio_entry(m, region_entry, own, crowd)
             entry["state"] = state
             state_entries.append(entry)
         payload[state] = state_entries

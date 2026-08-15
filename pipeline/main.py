@@ -97,7 +97,7 @@ def _fetch_all_recent_reports(now: datetime, client=None) -> dict[str, list[dict
     cutoff = (now - timedelta(minutes=_REPORT_WINDOW_MIN)).isoformat()
     response = (
         client.table("outage_reports")
-        .select("region,status,ip_hash,lat,lon,created_at,sub_zone,device_fingerprint")
+        .select("region,status,ip_hash,lat,lon,created_at,sub_zone,device_fingerprint,parroquia")
         .gte("created_at", cutoff)
         .execute()
     )
@@ -455,8 +455,15 @@ def run(now: datetime | None = None) -> dict:
                 baselines=load_baselines(),
                 save_baselines_fn=save_baselines,
             )
+            from pipeline.crowd_municipio import build_crowd_by_municipio
+
+            crowd_by_municipio = build_crowd_by_municipio(
+                raw_by_region, validator=validator, now=now
+            )
             municipios_section = build_municipios_payload(
-                region_output, satellite_by_municipio
+                region_output,
+                satellite_by_municipio,
+                crowd_by_municipio,
             )
             logger.info("municipio layer: %d states, %d municipios",
                         len(municipios_section),
