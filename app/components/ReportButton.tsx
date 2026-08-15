@@ -23,6 +23,14 @@ const REGIONS = [
   { key: 'cumana',           name: 'Cumaná (Sucre)' },
   { key: 'porlamar',         name: 'Porlamar (Nueva Esparta)' },
   { key: 'ciudad_guayana',   name: 'Ciudad Guayana (Bolívar)' },
+  { key: 'guanare',          name: 'Guanare (Portuguesa)' },
+  { key: 'san_felipe',       name: 'San Felipe (Yaracuy)' },
+  { key: 'san_carlos',       name: 'San Carlos (Cojedes)' },
+  { key: 'san_juan_de_los_morros', name: 'San Juan de los Morros (Guárico)' },
+  { key: 'san_fernando_de_apure',  name: 'San Fernando de Apure (Apure)' },
+  { key: 'puerto_ayacucho',  name: 'Puerto Ayacucho (Amazonas)' },
+  { key: 'tucupita',         name: 'Tucupita (Delta Amacuro)' },
+  { key: 'la_guaira',        name: 'La Guaira (La Guaira)' },
 ] as const;
 
 const STATUS_OPTIONS = [

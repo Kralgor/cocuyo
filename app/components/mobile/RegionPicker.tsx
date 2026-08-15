@@ -20,6 +20,10 @@ const REGION_GROUPS: { label: string; labelEn: string; regions: RegionDef[] }[] 
       { key: 'barquisimeto',   name: 'Barquisimeto',     state: 'Lara',             displayName: 'Barquisimeto (Lara)' },
       { key: 'punto_fijo',     name: 'Punto Fijo',       state: 'Falcón',           displayName: 'Punto Fijo (Falcón)' },
       { key: 'barinas',        name: 'Barinas',          state: 'Barinas',          displayName: 'Barinas (Barinas)' },
+      { key: 'guanare',        name: 'Guanare',          state: 'Portuguesa',       displayName: 'Guanare (Portuguesa)' },
+      { key: 'san_felipe',     name: 'San Felipe',       state: 'Yaracuy',          displayName: 'San Felipe (Yaracuy)' },
+      { key: 'san_fernando_de_apure', name: 'San Fernando de Apure', state: 'Apure', displayName: 'San Fernando de Apure (Apure)' },
+      { key: 'puerto_ayacucho', name: 'Puerto Ayacucho', state: 'Amazonas',         displayName: 'Puerto Ayacucho (Amazonas)' },
     ],
   },
   {
@@ -30,6 +34,9 @@ const REGION_GROUPS: { label: string; labelEn: string; regions: RegionDef[] }[] 
       { key: 'caracas',        name: 'Caracas',          state: 'Distrito Capital', displayName: 'Caracas (Distrito Capital)' },
       { key: 'los_teques',     name: 'Los Teques',       state: 'Miranda',          displayName: 'Los Teques (Miranda)' },
       { key: 'guarenas_guatire',name:'Guarenas-Guatire', state: 'Miranda',          displayName: 'Guarenas-Guatire (Miranda)' },
+      { key: 'san_carlos',     name: 'San Carlos',       state: 'Cojedes',          displayName: 'San Carlos (Cojedes)' },
+      { key: 'san_juan_de_los_morros', name: 'San Juan de los Morros', state: 'Guárico', displayName: 'San Juan de los Morros (Guárico)' },
+      { key: 'la_guaira',      name: 'La Guaira',        state: 'La Guaira',        displayName: 'La Guaira (La Guaira)' },
     ],
   },
   {
@@ -40,6 +47,7 @@ const REGION_GROUPS: { label: string; labelEn: string; regions: RegionDef[] }[] 
       { key: 'cumana',         name: 'Cumaná',           state: 'Sucre',            displayName: 'Cumaná (Sucre)' },
       { key: 'porlamar',       name: 'Porlamar',         state: 'Nueva Esparta',    displayName: 'Porlamar (Nueva Esparta)' },
       { key: 'ciudad_guayana', name: 'Ciudad Guayana',   state: 'Bolívar',          displayName: 'Ciudad Guayana (Bolívar)' },
+      { key: 'tucupita',       name: 'Tucupita',         state: 'Delta Amacuro',    displayName: 'Tucupita (Delta Amacuro)' },
     ],
   },
 ];

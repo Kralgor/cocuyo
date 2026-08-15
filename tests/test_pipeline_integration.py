@@ -74,7 +74,7 @@ class TestSchema:
     def test_all_17_regions_present(self):
         doc = run_pipeline({})
         assert set(doc["regions"].keys()) == set(REGIONS.keys())
-        assert len(doc["regions"]) == 17
+        assert len(doc["regions"]) == 25
 
     def test_every_region_has_required_keys(self):
         doc = run_pipeline({})

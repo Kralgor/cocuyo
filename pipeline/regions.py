@@ -119,6 +119,56 @@ REGIONS: dict[str, RegionMeta] = {
         "lat": 8.3667,
         "lon": -62.6500,
     },
+    # ── states added 2026-08-15 (per-municipio map): capitals of the 8
+    # previously region-less states, so every municipio is selectable.
+    "guanare": {
+        "display_name": "Guanare (Portuguesa)",
+        "state": "Portuguesa",
+        "lat": 9.0479,
+        "lon": -69.7492,
+    },
+    "san_felipe": {
+        "display_name": "San Felipe (Yaracuy)",
+        "state": "Yaracuy",
+        "lat": 10.3375,
+        "lon": -68.7392,
+    },
+    "san_carlos": {
+        "display_name": "San Carlos (Cojedes)",
+        "state": "Cojedes",
+        "lat": 9.6608,
+        "lon": -68.5860,
+    },
+    "san_juan_de_los_morros": {
+        "display_name": "San Juan de los Morros (Guárico)",
+        "state": "Guárico",
+        "lat": 9.9109,
+        "lon": -67.3582,
+    },
+    "san_fernando_de_apure": {
+        "display_name": "San Fernando de Apure (Apure)",
+        "state": "Apure",
+        "lat": 7.8813,
+        "lon": -67.4723,
+    },
+    "puerto_ayacucho": {
+        "display_name": "Puerto Ayacucho (Amazonas)",
+        "state": "Amazonas",
+        "lat": 5.6636,
+        "lon": -67.6240,
+    },
+    "tucupita": {
+        "display_name": "Tucupita (Delta Amacuro)",
+        "state": "Delta Amacuro",
+        "lat": 9.0578,
+        "lon": -62.0553,
+    },
+    "la_guaira": {
+        "display_name": "La Guaira (La Guaira)",
+        "state": "La Guaira",
+        "lat": 10.6032,
+        "lon": -66.9330,
+    },
 }
 
 # ── adjacency map ──
@@ -130,18 +180,27 @@ ADJACENCY_MAP: dict[str, list[str]] = {
     "san_cristobal": ["merida", "barinas"],
     "merida": ["san_cristobal", "valera", "barinas"],
     "valera": ["merida", "maracaibo", "barquisimeto", "barinas"],
-    "barinas": ["san_cristobal", "merida", "valera", "barquisimeto"],
-    "barquisimeto": ["punto_fijo", "valera", "barinas", "valencia"],
-    "valencia": ["barquisimeto", "maracay"],
-    "maracay": ["valencia", "los_teques", "caracas"],
-    "caracas": ["los_teques", "guarenas_guatire", "maracay"],
+    "barinas": ["san_cristobal", "merida", "valera", "barquisimeto", "guanare", "san_fernando_de_apure"],
+    "barquisimeto": ["punto_fijo", "valera", "barinas", "valencia", "guanare", "san_felipe"],
+    "valencia": ["barquisimeto", "maracay", "san_carlos"],
+    "maracay": ["valencia", "los_teques", "caracas", "san_juan_de_los_morros"],
+    "caracas": ["los_teques", "guarenas_guatire", "maracay", "la_guaira"],
     "los_teques": ["caracas", "maracay", "guarenas_guatire"],
     "guarenas_guatire": ["caracas", "los_teques", "barcelona"],
     "barcelona": ["guarenas_guatire", "cumana", "maturin"],
     "cumana": ["barcelona", "porlamar", "maturin"],
-    "maturin": ["barcelona", "cumana", "ciudad_guayana"],
+    "maturin": ["barcelona", "cumana", "ciudad_guayana", "tucupita"],
     "porlamar": ["cumana"],
-    "ciudad_guayana": ["maturin"],
+    "ciudad_guayana": ["maturin", "tucupita"],
+    # 2026-08-15 additions — neighbors mirror the state map
+    "guanare": ["barinas", "san_carlos", "barquisimeto"],
+    "san_felipe": ["san_carlos", "barquisimeto"],
+    "san_carlos": ["guanare", "san_felipe", "valencia", "san_juan_de_los_morros"],
+    "san_juan_de_los_morros": ["san_carlos", "maracay", "san_fernando_de_apure"],
+    "san_fernando_de_apure": ["san_juan_de_los_morros", "barinas"],
+    "puerto_ayacucho": [],
+    "tucupita": ["maturin", "ciudad_guayana"],
+    "la_guaira": ["caracas"],
 }
 
 

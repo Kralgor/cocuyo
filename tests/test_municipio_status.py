@@ -52,9 +52,12 @@ class TestRegionForState:
     def test_miranda_maps_to_first_region(self):
         assert region_for_state("Miranda") == "los_teques"
 
-    def test_state_without_region_returns_none(self):
-        assert region_for_state("Amazonas") is None
-        assert region_for_state("Apure") is None
+    def test_every_state_has_a_region(self):
+        # Since 2026-08-15 all 24 states have a region (the 8 state capitals
+        # were added), so every municipio is selectable/reportable.
+        from pipeline.municipios import STATE_ORDER
+        for state in STATE_ORDER:
+            assert region_for_state(state) is not None, state
 
 
 # ── derive_municipio_entry (v2 satellite-dominant) ────────────────────────────

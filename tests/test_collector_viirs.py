@@ -175,8 +175,14 @@ class TestWithGranules:
         assert result["caracas"]["baseline"] == baseline
 
     def test_all_17_regions_have_baselines(self):
+        # The original 17 regions all have baselines; the 8 state capitals
+        # added 2026-08-15 legitimately don't (no baseline history yet).
         from pipeline.regions import REGIONS
-        assert set(BASELINE_RADIANCE.keys()) == set(REGIONS.keys())
+        original = [k for k in REGIONS if k not in (
+            "guanare", "san_felipe", "san_carlos", "san_juan_de_los_morros",
+            "san_fernando_de_apure", "puerto_ayacucho", "tucupita", "la_guaira",
+        )]
+        assert set(BASELINE_RADIANCE.keys()) == set(original)
 
     def test_date_str_sent_to_cmr(self):
         s = self._session_with_granules()
