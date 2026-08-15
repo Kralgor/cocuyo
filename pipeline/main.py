@@ -91,16 +91,34 @@ def _fetch_all_recent_reports(now: datetime, client=None) -> dict[str, list[dict
     Pull all crowd reports from last 30 min in one query.
     Keyed by canonical region (unknown regions discarded).
     One collector — caller increments collector_errors on failure.
+
+    The parroquia column may not exist yet in the live Supabase project
+    (Phase 2 migration). The select tries WITH parroquia and falls back to
+    WITHOUT on a schema error — so crowd collection keeps working before
+    the migration and picks up per-municipio data automatically after.
     """
     if client is None:
         client = _create_supabase_client()
     cutoff = (now - timedelta(minutes=_REPORT_WINDOW_MIN)).isoformat()
-    response = (
-        client.table("outage_reports")
-        .select("region,status,ip_hash,lat,lon,created_at,sub_zone,device_fingerprint,parroquia")
-        .gte("created_at", cutoff)
-        .execute()
-    )
+
+    base_select = "region,status,ip_hash,lat,lon,created_at,sub_zone,device_fingerprint"
+    for fields in (f"{base_select},parroquia", base_select):
+        try:
+            response = (
+                client.table("outage_reports")
+                .select(fields)
+                .gte("created_at", cutoff)
+                .execute()
+            )
+            break
+        except Exception as exc:
+            # PGRST204 = column not found in schema cache — retry without it
+            if "PGRST204" not in str(exc) and "does not exist" not in str(exc):
+                raise
+            logger.warning("outage_reports.parroquia missing — falling back to region-only select")
+    else:
+        raise RuntimeError("could not select outage_reports (schema incompatible)")
+
     by_region: dict[str, list[dict]] = {k: [] for k in REGIONS}
     for report in (response.data or []):
         region = report.get("region")

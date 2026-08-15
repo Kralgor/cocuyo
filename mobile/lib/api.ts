@@ -152,10 +152,15 @@ export async function registerToken(
 }
 
 export async function submitReport(payload: ReportPayload): Promise<void> {
+  // parroquia is only included when actually chosen: the column may not
+  // exist yet in Supabase, and PostgREST 400s on unknown columns.
+  const body: Record<string, unknown> = { ...payload };
+  if (!payload.parroquia) delete body.parroquia;
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
     method: 'POST',
     headers: REPORT_HEADERS,
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
