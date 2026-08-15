@@ -116,16 +116,19 @@ export async function submitReport(payload: {
   city_freetext: string | null;
   parroquia?:    string | null;
 }): Promise<void> {
+  // parroquia is only included when actually chosen: the column may not
+  // exist yet in Supabase, and PostgREST 400s on unknown columns.
+  const body: Record<string, unknown> = {
+    ...payload,
+    onset_type:         null,   // Phase 2+
+    symptom:            null,   // Phase 2+
+    device_fingerprint: null,   // ADR-005 deferred to Phase 4
+  };
+  if (!payload.parroquia) delete body.parroquia;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
     method:  'POST',
     headers: HEADERS,
-    body:    JSON.stringify({
-      ...payload,
-      parroquia:          payload.parroquia ?? null,
-      onset_type:         null,   // Phase 2+
-      symptom:            null,   // Phase 2+
-      device_fingerprint: null,   // ADR-005 deferred to Phase 4
-    }),
+    body:    JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
