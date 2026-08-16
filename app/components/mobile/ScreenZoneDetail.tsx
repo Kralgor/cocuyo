@@ -9,10 +9,11 @@ import ReportButtons from './ReportButtons';
 import PowerBackBanner from './PowerBackBanner';
 
 interface Props {
-  theme:     Theme;
-  lang:      Lang;
-  regionKey: string;
-  region:    RegionEntry | null;
+  theme:      Theme;
+  lang:       Lang;
+  regionKey:  string;
+  region:     RegionEntry | null;
+  onReported?: () => void;
 }
 
 function StatusBadge({ status, theme: t, lang }: { status: string; theme: Theme; lang: Lang }) {
@@ -134,7 +135,7 @@ function LockedSignalRow({ label, theme: t, lang }: { label: string; theme: Them
   );
 }
 
-export default function ScreenZoneDetail({ theme: t, lang, regionKey, region }: Props) {
+export default function ScreenZoneDetail({ theme: t, lang, regionKey, region, onReported }: Props) {
   if (!region) {
     return (
       <div style={{ padding: '24px 22px', color: t.inkDim, fontFamily: 'var(--font-mono)', fontSize: 11 }}>
@@ -219,6 +220,35 @@ export default function ScreenZoneDetail({ theme: t, lang, regionKey, region }: 
         <RationingCallout pattern={region.rationing_pattern} theme={t} lang={lang} />
       )}
 
+      {/* ── Community reports callout — social proof, unmissable ── */}
+      {reports30 > 0 && (
+        <div style={{
+          padding: '12px 14px',
+          background: 'rgba(232,200,64,0.08)',
+          border: `1px solid ${t.accent}`,
+          borderLeft: `3px solid ${t.accent}`,
+          borderRadius: 8,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ fontSize: 18, lineHeight: 1 }}>👥</span>
+          <div>
+            <div style={{
+              fontFamily: 'var(--font-serif)', fontSize: 15,
+              fontWeight: 600, color: t.ink, lineHeight: 1.2,
+            }}>
+              {reports30 === 1
+                ? (lang === 'es' ? '1 persona reporta actividad ahora mismo' : '1 person reporting right now')
+                : (lang === 'es' ? `${reports30} personas reportan actividad ahora mismo` : `${reports30} people reporting right now`)}
+            </div>
+            <div style={{ fontSize: 11, color: t.inkDim, marginTop: 2 }}>
+              {lang === 'es'
+                ? 'Reportes de la comunidad en los últimos 30 minutos.'
+                : 'Community reports in the last 30 minutes.'}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Signal fingerprint ── */}
       <div>
         <SectionLabel theme={t} label={tt('signal_print', lang)} action={
@@ -267,7 +297,7 @@ export default function ScreenZoneDetail({ theme: t, lang, regionKey, region }: 
       </div>
 
       {/* ── Report buttons ── */}
-      <ReportButtons theme={t} lang={lang} regionKey={regionKey} />
+      <ReportButtons theme={t} lang={lang} regionKey={regionKey} onReported={onReported} />
 
       </div>
     </div>

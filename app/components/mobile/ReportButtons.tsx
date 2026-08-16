@@ -42,9 +42,10 @@ interface Props {
   lang:        Lang;
   regionKey:   string;
   regionName?: string;
+  onReported?: () => void;
 }
 
-export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
+export default function ReportButtons({ theme: t, lang, regionKey, onReported }: Props) {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const undoRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const coolRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -107,6 +108,7 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
       const count = await getRecentCount(regionKey);
 
       setPhase({ kind: 'submitted', status: statusKey, count, secondsLeft: UNDO_SECONDS });
+      if (onReported) onReported();
 
       // Countdown timer for undo window
       undoRef.current = setInterval(() => {
@@ -143,6 +145,7 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
   if (phase.kind === 'submitted') {
     const { count, secondsLeft, status: submittedStatus } = phase;
     const others = count != null && count > 1 ? count - 1 : 0;
+    const accentColor = submittedStatus === 'power_back' ? t.ok : submittedStatus === 'unstable' ? t.warn : t.danger;
     const socialText = count != null && count > 0
       ? (lang === 'es'
           ? `Tú + ${others} otros · 30 min`
@@ -153,8 +156,9 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
       <div style={{
         padding: '14px 16px',
         background: t.panel,
-        border: `0.5px solid ${t.line}`,
-        borderLeft: `2px solid ${submittedStatus === 'power_back' ? t.ok : submittedStatus === 'unstable' ? t.warn : t.danger}`,
+        border: `1px solid ${accentColor}`,
+        borderLeft: `3px solid ${accentColor}`,
+        borderRadius: 8,
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -174,6 +178,16 @@ export default function ReportButtons({ theme: t, lang, regionKey }: Props) {
           >
             {tt('undo', lang)} ({secondsLeft}s)
           </button>
+        </div>
+        <div style={{
+          fontFamily: 'var(--font-serif)', fontSize: 15,
+          color: accentColor, lineHeight: 1.25,
+        }}>
+          {submittedStatus === 'power_back'
+            ? (lang === 'es' ? '¡La luz volvió! Tu reporte ayuda a confirmarlo.' : 'Power is back! Your report helps confirm it.')
+            : (lang === 'es'
+                ? `Reporte enviado. ${count != null && count > 0 ? 'La comunidad lo confirma: ' + count + (count === 1 ? ' persona' : ' personas') + ' reportan ahora mismo.' : 'Ahora los vecinos pueden confirmarlo.'}`
+                : `Report sent. ${count != null && count > 0 ? 'The community confirms it: ' + count + (count === 1 ? ' person' : ' people') + ' reporting right now.' : 'Now neighbors can confirm it.'}`)}
         </div>
         <div style={{
           height: 2, background: t.line,

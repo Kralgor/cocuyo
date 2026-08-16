@@ -10,7 +10,7 @@ import Toast from '@/components/Toast';
 import ZonePicker from '@/components/ZonePicker';
 import { useTheme } from '@/hooks/useTheme';
 import { useReportQueue } from '@/hooks/useReportQueue';
-import { type ReportPayload, submitReport } from '@/lib/api';
+import { type ReportPayload, getRecentCount, submitReport } from '@/lib/api';
 import { composeShareText, shareToWhatsApp } from '@/lib/share';
 import { detectNearestZone } from '@/lib/gps';
 import { canEnqueue, enqueue } from '@/lib/queue';
@@ -92,7 +92,13 @@ export default function ReportScreen() {
       if (reachable) {
         await submitReport(payload);
         storage.set(STORAGE_KEYS.lastReportTime, epochNow());
-        setToast(tt('toast_sent', lang));
+        // social proof: how many people are reporting right now
+        const count = await getRecentCount(zoneKey);
+        setToast(
+          count != null && count > 1
+            ? tt('toast_sent_count', lang).replace('{n}', String(count))
+            : tt('toast_sent', lang),
+        );
       } else {
         enqueue(payload);
         setToast(tt('toast_queued', lang));
