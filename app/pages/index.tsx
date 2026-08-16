@@ -25,7 +25,7 @@ const Map = dynamic(() => import('../components/Map'), {
 
 const Home: NextPage = () => {
   const { theme, lang, selectedRegion, setSelectedRegion } = useApp();
-  const { status, offline } = useAutoRefresh();
+  const { status, offline, refresh } = useAutoRefresh();
   const [activeTab,    setActiveTab]    = useState<TabId>('zone');
   const [showPicker,   setShowPicker]   = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -161,6 +161,7 @@ const Home: NextPage = () => {
               lang={lang}
               regionKey={effectiveRegionKey ?? ''}
               region={effectiveRegionKey ? (status?.regions[effectiveRegionKey] ?? null) : null}
+              onReported={refresh}
             />
           </>
         );

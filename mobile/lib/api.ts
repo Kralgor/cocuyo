@@ -167,3 +167,22 @@ export async function submitReport(payload: ReportPayload): Promise<void> {
     throw new Error(`HTTP ${res.status}`);
   }
 }
+
+// ── getRecentCount ─────────────────────────────────────────────────────────────
+// Social proof count for the zone right after submitting a report.
+// The RPC refuses (returns null) unless the caller submitted in the last
+// 60s — anti-recon gate, so this is only useful immediately after a submit.
+export async function getRecentCount(region: string, minutes = 30): Promise<number | null> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_recent_count`, {
+      method: 'POST',
+      headers: { ...REPORT_HEADERS, Prefer: '' },
+      body: JSON.stringify({ p_region: region, p_minutes: minutes }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as unknown;
+    return typeof data === 'number' ? data : null;
+  } catch {
+    return null;
+  }
+}

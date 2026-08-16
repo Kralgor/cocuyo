@@ -91,6 +91,20 @@ export default function ZoneScreen() {
       >
         <BatteryBanner visible={isBatterySaving} lang={lang} theme={theme} />
 
+        {region && (region.crowd_reports_30min ?? 0) > 0 && (
+          <View style={styles.crowdCallout}>
+            <Ionicons name="people" size={16} color={theme.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.crowdTitle}>
+                {region.crowd_reports_30min === 1
+                  ? tt('crowd_1_active', lang)
+                  : tt('crowd_n_active', lang).replace('{n}', String(region.crowd_reports_30min))}
+              </Text>
+              <Text style={styles.crowdSub}>{tt('crowd_sub', lang)}</Text>
+            </View>
+          </View>
+        )}
+
         {showFirstError ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{tt('no_data_first_launch', lang)}</Text>
@@ -178,6 +192,28 @@ function createStyles(theme: MobileTheme) {
     },
     heroWrap: {
       position: 'relative',
+    },
+    crowdCallout: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      padding: 12,
+      borderRadius: 10,
+      backgroundColor: theme.panel,
+      borderWidth: 1,
+      borderColor: theme.accent,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.accent,
+    },
+    crowdTitle: {
+      color: theme.ink,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    crowdSub: {
+      color: theme.inkDim,
+      fontSize: 11,
+      marginTop: 2,
     },
     shareButton: {
       position: 'absolute',
