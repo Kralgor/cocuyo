@@ -205,6 +205,9 @@ export default function Map({
               <Tooltip direction="top" offset={[0, -6]}>
                 <span style={{ fontFamily: 'system-ui', fontSize: 12 }}>
                   <strong>{m.name}</strong> ({state}) · {statusLabel(m.status)}
+                  {(m.crowd_reports_30min ?? 0) > 0 && (
+                    <> · {m.crowd_reports_30min} rep</>
+                  )}
                 </span>
               </Tooltip>
             </CircleMarker>

@@ -69,10 +69,12 @@ export interface StatusJson {
 // Each municipio carries its own satellite sample + attributed region signals.
 export interface MunicipioEntry {
   name:          string;
+  state:         string;
   lat:           number;
   lon:           number;
   current_score: number;
   status:        string;
+  crowd_reports_30min?: number;
   signals: {
     internet:    number | null;
     satellite:   number | null;
