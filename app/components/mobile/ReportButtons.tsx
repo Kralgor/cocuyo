@@ -186,7 +186,7 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
           {submittedStatus === 'power_back'
             ? (lang === 'es' ? '¡La luz volvió! Tu reporte ayuda a confirmarlo.' : 'Power is back! Your report helps confirm it.')
             : (lang === 'es'
-                ? `Reporte enviado. ${count != null && count > 0 ? 'La comunidad lo confirma: ' + count + (count === 1 ? ' persona' : ' personas') + ' reportan ahora mismo.' : 'Ahora los vecinos pueden confirmarlo.'}`
+                ? `Reporte enviado. ${count != null && count > 0 ? 'La comunidad lo confirma: ' + count + (count === 1 ? ' persona reporta' : ' personas reportan') + ' ahora mismo.' : 'Ahora los vecinos pueden confirmarlo.'}`
                 : `Report sent. ${count != null && count > 0 ? 'The community confirms it: ' + count + (count === 1 ? ' person' : ' people') + ' reporting right now.' : 'Now neighbors can confirm it.'}`)}
         </div>
         <div style={{
