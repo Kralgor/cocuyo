@@ -5,6 +5,7 @@ import { submitReport, getRecentCount } from '../../lib/api';
 import { getRegion } from './RegionPicker';
 import { loadParroquias, getMunicipios, getParroquias } from '../../lib/parroquias';
 import type { ParroquiaDataset } from '../../lib/parroquias';
+import { isInVenezuela } from '../../lib/geo';
 
 const LAST_REPORT_KEY = 'cocuyo_last_report';
 const UNDO_SECONDS    = 60;
@@ -35,7 +36,7 @@ type Phase =
   | { kind: 'submitted'; status: string; count: number | null; secondsLeft: number }
   | { kind: 'undone' }
   | { kind: 'cooldown' }
-  | { kind: 'error' };
+  | { kind: 'error'; message?: string };
 
 interface Props {
   theme:       Theme;
@@ -89,6 +90,15 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
       lon = pos.coords.longitude;
     } catch {
       // GPS optional — submit without
+    }
+
+    // Reject coordinates outside Venezuela (same bbox as the DB constraint).
+    // GPS absent is allowed — manual fallback for users without permission.
+    if (lat != null && lon != null && !isInVenezuela(lat, lon)) {
+      setPhase({ kind: 'error', message: lang === 'es'
+        ? 'Tu ubicación no está dentro de Venezuela. Solo se aceptan reportes del país.'
+        : 'Your location is not inside Venezuela. Only in-country reports are accepted.' });
+      return;
     }
 
     try {
@@ -221,6 +231,7 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
 
   // ── Error state ──────────────────────────────────────────────
   if (phase.kind === 'error') {
+    const message = phase.message ?? (lang === 'es' ? 'Error al enviar. Intenta de nuevo.' : 'Send failed. Try again.');
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{
@@ -229,7 +240,7 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
           fontFamily: 'var(--font-mono)', fontSize: 10,
           color: t.danger,
         }}>
-          {lang === 'es' ? 'Error al enviar. Intenta de nuevo.' : 'Send failed. Try again.'}
+          {message}
         </div>
         <button
           onClick={() => setPhase({ kind: 'idle' })}
