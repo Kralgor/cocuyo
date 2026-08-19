@@ -95,8 +95,8 @@ const STRINGS: StringMap = {
   // rationing callout
   rationing_pattern:{ es: 'Patrón de racionamiento conocido',               en: 'Known rationing pattern' },
   // phase info
-  phase_1_label:    { es: 'Fase 1: Solo datos de comunidad',                en: 'Phase 1: Crowd data only' },
-  signals_locked:   { es: 'Señales desbloqueadas en Fase 2',                en: 'Signals unlocked in Phase 2' },
+  phase_1_label:    { es: 'Basado en reportes de la comunidad',         en: 'Based on community reports' },
+  signals_locked:   { es: 'Señales adicionales próximamente',            en: 'More signals coming soon' },
   // cross-service dashboard
   services:         { es: 'Servicios',                                     en: 'Services' },
   svc_power:        { es: 'Luz',                                           en: 'Power' },
@@ -122,7 +122,7 @@ const STRINGS: StringMap = {
   med_oxygen:       { es: 'Concentrador de oxígeno',                       en: 'Oxygen concentrator' },
   med_notif:        { es: 'Notificaciones push',                           en: 'Push notifications' },
   med_notif_active: { es: 'Activas · umbral 60%',                          en: 'Active · threshold 60%' },
-  med_phase4:       { es: 'Alertas activas en Fase 4. Configura tu perfil ahora.', en: 'Alerts active in Phase 4. Set up your profile now.' },
+  med_phase4:       { es: 'Alertas activas (modelo de predicción). Configura tu perfil ahora.', en: 'Alerts active (prediction model). Set up your profile now.' },
   // water status
   water_supply:     { es: 'Suministro de agua',                            en: 'Water supply' },
   water_low_risk:   { es: 'Bajo riesgo',                                   en: 'Low risk' },

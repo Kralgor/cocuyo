@@ -208,8 +208,8 @@ export default function MedicalAlerts({ theme: t, lang, predictionScore, regionN
           fontFamily: 'var(--font-mono)', fontSize: 11, color: t.inkDim,
         }}>
           {lbl(
-            'Alertas activas en Fase 4 (modelo de predicción). Configura tu perfil ahora.',
-            'Alerts active in Phase 4 (prediction model). Set up your profile now.'
+            'Alertas activas (modelo de predicción). Configura tu perfil ahora.',
+            'Alerts active (prediction model). Set up your profile now.'
           )}
         </div>
       )}

@@ -14,8 +14,13 @@ interface ReportConfirmSheetProps {
   status: 'no_power' | 'power_back';
   isSubmitting: boolean;
   onClose: () => void;
-  onSubmit: (parroquia: string | null) => void;
+  onSubmit: (parroquia: string | null, when: { startedAt: string | null; endedAt: string | null }) => void;
 }
+
+// ── retroactive window state ──────────────────────────────────────────────────
+// Default: right now. "Antes" reveals day + start/end time steppers.
+type WhenMode = 'now' | 'earlier';
+type WhenDay = 'today' | 'yesterday';
 
 export default function ReportConfirmSheet({
   visible,
@@ -29,6 +34,10 @@ export default function ReportConfirmSheet({
   const { theme } = useTheme();
   const [municipio, setMunicipio] = useState<string | null>(null);
   const [parroquia, setParroquia] = useState<string | null>(null);
+  const [whenMode, setWhenMode] = useState<WhenMode>('now');
+  const [whenDay, setWhenDay] = useState<WhenDay>('today');
+  const [startHour, setStartHour] = useState(14);
+  const [endHour, setEndHour] = useState<number | null>(null);
   const municipios = useMemo(() => getMunicipios(regionKey), [regionKey]);
   const parroquias = useMemo(() => (municipio ? getParroquias(regionKey, municipio) : []), [municipio, regionKey]);
   const region = REGIONS[regionKey];
@@ -38,6 +47,38 @@ export default function ReportConfirmSheet({
     setMunicipio(next);
     setParroquia(null);
   }
+
+  function submit() {
+    let startedAt: string | null = null;
+    let endedAt: string | null = null;
+    if (whenMode === 'earlier') {
+      const start = new Date();
+      if (whenDay === 'yesterday') start.setDate(start.getDate() - 1);
+      start.setHours(startHour, 0, 0, 0);
+      startedAt = start.toISOString();
+      if (endHour != null) {
+        const end = new Date(start);
+        end.setHours(endHour, 0, 0, 0);
+        endedAt = end.toISOString();
+      }
+    }
+    onSubmit(parroquia, { startedAt, endedAt });
+  }
+
+  const fmtTime = (h: number, m = 0) =>
+    `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const stepper = (label: string, value: string, onUp: () => void, onDown: () => void) => (
+    <View style={[styles.step, { borderColor: theme.lineStrong }]}>
+      <Text style={[styles.stepLabel, { color: theme.inkFaint }]}>{label}</Text>
+      <Pressable onPress={onUp} hitSlop={8} accessibilityRole="button">
+        <Ionicons name="chevron-up" size={20} color={theme.ink} />
+      </Pressable>
+      <Text style={[styles.stepValue, { color: theme.ink }]}>{value}</Text>
+      <Pressable onPress={onDown} hitSlop={8} accessibilityRole="button">
+        <Ionicons name="chevron-down" size={20} color={theme.ink} />
+      </Pressable>
+    </View>
+  );
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -86,8 +127,79 @@ export default function ReportConfirmSheet({
             </ScrollView>
           )}
 
+          <Text style={[styles.label, { color: theme.inkDim }]}>{tt('when_label', lang)}</Text>
+          <View style={styles.whenRow}>
+            <Pressable
+              onPress={() => setWhenMode('now')}
+              style={[styles.whenBtn, { borderColor: whenMode === 'now' ? theme.accent : theme.lineStrong }]}
+            >
+              <Text style={[styles.whenBtnText, { color: whenMode === 'now' ? theme.ink : theme.inkDim }]}>
+                {tt('when_now', lang)}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setWhenMode('earlier')}
+              style={[styles.whenBtn, { borderColor: whenMode === 'earlier' ? theme.accent : theme.lineStrong }]}
+            >
+              <Text style={[styles.whenBtnText, { color: whenMode === 'earlier' ? theme.ink : theme.inkDim }]}>
+                {tt('when_earlier', lang)}
+              </Text>
+            </Pressable>
+          </View>
+
+          {whenMode === 'earlier' && (
+            <>
+              <View style={styles.whenRow}>
+                <Pressable
+                  onPress={() => setWhenDay('today')}
+                  style={[styles.whenBtn, { borderColor: whenDay === 'today' ? theme.accent : theme.lineStrong }]}
+                >
+                  <Text style={[styles.whenBtnText, { color: whenDay === 'today' ? theme.ink : theme.inkDim }]}>
+                    {tt('when_today', lang)}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setWhenDay('yesterday')}
+                  style={[styles.whenBtn, { borderColor: whenDay === 'yesterday' ? theme.accent : theme.lineStrong }]}
+                >
+                  <Text style={[styles.whenBtnText, { color: whenDay === 'yesterday' ? theme.ink : theme.inkDim }]}>
+                    {tt('when_yesterday', lang)}
+                  </Text>
+                </Pressable>
+              </View>
+              <View style={styles.stepRow}>
+                {stepper(
+                  tt('when_start', lang),
+                  fmtTime(startHour),
+                  () => setStartHour((startHour + 1) % 24),
+                  () => setStartHour((startHour + 23) % 24),
+                )}
+                <Pressable
+                  onPress={() => setEndHour(endHour == null ? startHour : null)}
+                  style={[styles.whenBtn, { borderColor: endHour != null ? theme.accent : theme.lineStrong, justifyContent: 'center' }]}
+                >
+                  <Text style={[styles.whenBtnText, { color: endHour != null ? theme.ink : theme.inkDim }]}>
+                    {endHour != null
+                      ? tt('when_end', lang).replace('{t}', fmtTime(endHour))
+                      : tt('when_ongoing', lang)}
+                  </Text>
+                </Pressable>
+              </View>
+              {endHour != null && (
+                <View style={styles.stepRow}>
+                  {stepper(
+                    tt('when_end', lang),
+                    fmtTime(endHour),
+                    () => setEndHour((endHour + 1) % 24),
+                    () => setEndHour((endHour + 23) % 24),
+                  )}
+                </View>
+              )}
+            </>
+          )}
+
           <Pressable
-            onPress={() => onSubmit(parroquia)}
+            onPress={submit}
             disabled={isSubmitting}
             style={({ pressed }) => [
               styles.submit,
@@ -183,5 +295,44 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     fontSize: 16,
     fontWeight: '700',
+  },
+  whenRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  whenBtn: {
+    flex: 1,
+    height: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whenBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  stepRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  step: {
+    flex: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 2,
+  },
+  stepLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  stepValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
 });

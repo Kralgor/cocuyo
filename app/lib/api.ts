@@ -117,9 +117,11 @@ export async function submitReport(payload: {
   lon:           number | null;
   city_freetext: string | null;
   parroquia?:    string | null;
+  started_at?:   string | null;
+  ended_at?:     string | null;
 }): Promise<void> {
-  // parroquia is only included when actually chosen: the column may not
-  // exist yet in Supabase, and PostgREST 400s on unknown columns.
+  // optional columns are only included when actually set: the columns may
+  // not exist yet in Supabase, and PostgREST 400s on unknown columns.
   const body: Record<string, unknown> = {
     ...payload,
     onset_type:         null,   // Phase 2+
@@ -127,6 +129,8 @@ export async function submitReport(payload: {
     device_fingerprint: null,   // ADR-005 deferred to Phase 4
   };
   if (!payload.parroquia) delete body.parroquia;
+  if (!payload.started_at) delete body.started_at;
+  if (!payload.ended_at) delete body.ended_at;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/outage_reports`, {
     method:  'POST',
     headers: HEADERS,

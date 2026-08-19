@@ -53,6 +53,11 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
   const [parrData, setParrData]     = useState<ParroquiaDataset[] | null>(null);
   const [municipio, setMunicipio]   = useState('');
   const [parroquia, setParroquia]   = useState('');
+  // retroactive outage window — default is "right now"
+  const [whenMode, setWhenMode]     = useState<'now' | 'earlier'>('now');
+  const [whenDay, setWhenDay]       = useState<'today' | 'yesterday'>('today');
+  const [startTime, setStartTime]   = useState('14:00');
+  const [endTime, setEndTime]       = useState('');
 
   // parroquia dataset for the selected region's state (loaded lazily)
   const state = getRegion(regionKey)?.state ?? '';
@@ -67,6 +72,28 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
   function resetParroquia() {
     setMunicipio('');
     setParroquia('');
+    setWhenMode('now');
+    setStartTime('14:00');
+    setEndTime('');
+  }
+
+  // retroactive window → ISO timestamps (device-local time)
+  function retroTimes(): { startedAt: string | null; endedAt: string | null } {
+    if (whenMode !== 'earlier') return { startedAt: null, endedAt: null };
+    const [sh, sm] = startTime.split(':').map(Number);
+    const start = new Date();
+    if (whenDay === 'yesterday') start.setDate(start.getDate() - 1);
+    start.setHours(sh, sm, 0, 0);
+    let end: Date | null = null;
+    if (endTime) {
+      const [eh, em] = endTime.split(':').map(Number);
+      end = new Date(start);
+      end.setHours(eh, em, 0, 0);
+    }
+    return {
+      startedAt: start.toISOString(),
+      endedAt: end ? end.toISOString() : null,
+    };
   }
 
   useEffect(() => () => {
@@ -102,6 +129,7 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
     }
 
     try {
+      const times = retroTimes();
       await submitReport({
         region:        regionKey,
         status:        statusKey,
@@ -109,6 +137,8 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
         lon,
         city_freetext: null,
         parroquia:     parroquia || null,
+        started_at:    times.startedAt,
+        ended_at:      times.endedAt,
       });
 
       saveLastReport({ region: regionKey, status: statusKey, timestamp: Date.now() });
@@ -311,6 +341,104 @@ export default function ReportButtons({ theme: t, lang, regionKey, onReported }:
             )}
           </div>
         )}
+
+        {/* Retroactive window — default: right now */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: 9,
+            color: t.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em',
+          }}>
+            {lang === 'es' ? '¿Cuándo pasó?' : 'When did it happen?'}
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={() => setWhenMode('now')}
+              disabled={isSubmitting}
+              style={{
+                flex: 1, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                background: whenMode === 'now' ? t.accent : 'transparent',
+                color: whenMode === 'now' ? t.bg : t.inkDim,
+                border: `0.5px solid ${t.line}`, fontFamily: 'var(--font-mono)', fontSize: 10,
+              }}
+            >
+              {lang === 'es' ? 'Ahora mismo' : 'Right now'}
+            </button>
+            <button
+              onClick={() => setWhenMode('earlier')}
+              disabled={isSubmitting}
+              style={{
+                flex: 1, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                background: whenMode === 'earlier' ? t.accent : 'transparent',
+                color: whenMode === 'earlier' ? t.bg : t.inkDim,
+                border: `0.5px solid ${t.line}`, fontFamily: 'var(--font-mono)', fontSize: 10,
+              }}
+            >
+              {lang === 'es' ? 'Antes' : 'Earlier'}
+            </button>
+          </div>
+          {whenMode === 'earlier' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => setWhenDay('today')}
+                  style={{
+                    flex: 1, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                    background: whenDay === 'today' ? t.accent : 'transparent',
+                    color: whenDay === 'today' ? t.bg : t.inkDim,
+                    border: `0.5px solid ${t.line}`, fontFamily: 'var(--font-mono)', fontSize: 10,
+                  }}
+                >
+                  {lang === 'es' ? 'Hoy' : 'Today'}
+                </button>
+                <button
+                  onClick={() => setWhenDay('yesterday')}
+                  style={{
+                    flex: 1, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                    background: whenDay === 'yesterday' ? t.accent : 'transparent',
+                    color: whenDay === 'yesterday' ? t.bg : t.inkDim,
+                    border: `0.5px solid ${t.line}`, fontFamily: 'var(--font-mono)', fontSize: 10,
+                  }}
+                >
+                  {lang === 'es' ? 'Ayer' : 'Yesterday'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <label style={{
+                  flex: 1, display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '4px 8px', borderRadius: 6, border: `0.5px solid ${t.line}`,
+                  fontFamily: 'var(--font-mono)', fontSize: 10, color: t.inkDim,
+                }}>
+                  {lang === 'es' ? 'Empezó' : 'Started'}
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    style={{
+                      flex: 1, background: 'transparent', border: 'none',
+                      color: t.ink, fontFamily: 'var(--font-mono)', fontSize: 11,
+                    }}
+                  />
+                </label>
+                <label style={{
+                  flex: 1, display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '4px 8px', borderRadius: 6, border: `0.5px solid ${t.line}`,
+                  fontFamily: 'var(--font-mono)', fontSize: 10, color: t.inkDim,
+                }}>
+                  {lang === 'es' ? 'Volvió' : 'Came back'}
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    style={{
+                      flex: 1, background: 'transparent', border: 'none',
+                      color: t.ink, fontFamily: 'var(--font-mono)', fontSize: 11,
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Primary: No tengo luz */}
         <button
