@@ -119,7 +119,7 @@ function LockedSignalRow({ label, theme: t, lang }: { label: string; theme: Them
       }}>
         <span style={{ color: t.inkFaint, textTransform: 'uppercase' }}>{label}</span>
         <span style={{ color: t.inkFaint, fontSize: 9 }}>
-          {lang === 'es' ? 'Fase 2' : 'Phase 2'}
+          {lang === 'es' ? 'Próximamente' : 'Coming soon'}
         </span>
       </div>
       <div style={{

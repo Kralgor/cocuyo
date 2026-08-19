@@ -183,7 +183,7 @@ export default function Settings({ theme: t, lang, onClose }: Props) {
             fontFamily: 'var(--font-mono)', fontSize: 9,
             color: t.inkFaint, letterSpacing: '0.04em',
           }}>
-            {lang === 'es' ? 'Fase 1 · Solo datos de comunidad' : 'Phase 1 · Crowd data only'}
+            {lang === 'es' ? 'Datos abiertos · Código abierto' : 'Open data · Open source'}
           </div>
         </div>
       </div>

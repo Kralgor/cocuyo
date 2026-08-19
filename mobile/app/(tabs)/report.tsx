@@ -65,7 +65,11 @@ export default function ReportScreen() {
     setZonePickerOpen(false);
   }
 
-  function buildPayload(status: 'no_power' | 'power_back', parroquia: string | null): ReportPayload {
+  function buildPayload(
+    status: 'no_power' | 'power_back',
+    parroquia: string | null,
+    when: { startedAt: string | null; endedAt: string | null },
+  ): ReportPayload {
     return {
       region: zoneKey,
       status,
@@ -76,13 +80,15 @@ export default function ReportScreen() {
       symptom: null,
       device_fingerprint: null,
       parroquia,
+      started_at: when.startedAt,
+      ended_at: when.endedAt,
     };
   }
 
-  async function handleSubmit(parroquia: string | null) {
+  async function handleSubmit(parroquia: string | null, when: { startedAt: string | null; endedAt: string | null }) {
     if (!pendingStatus || !canSubmit) return;
 
-    const payload = buildPayload(pendingStatus, parroquia);
+    const payload = buildPayload(pendingStatus, parroquia, when);
     setIsSubmitting(true);
 
     try {
